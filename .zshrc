@@ -120,3 +120,7 @@ alias clist='config ls-tree -r main --name-only'
 
 # Enable git completion for config alias
 compdef config=git
+
+# Modern CLI tools
+eval "$(zoxide init zsh)"
+alias ls='lsd'
