@@ -1,4 +1,4 @@
-# Dotfiles
+# (Config) Dotfiles Repo
 
 Personal dotfiles managed with bare git repository method.
 
@@ -13,6 +13,7 @@ Or manually:
 ```bash
 git clone --bare https://github.com/andrew-tomago/dotfiles.git $HOME/.dotfiles.git
 alias config="/usr/bin/git --git-dir=$HOME/.dotfiles.git --work-tree=$HOME"
+# The repository is configured to hide untracked files. Without this, `config status` would show every file in your home directory:
 config config --local status.showUntrackedFiles no
 config checkout
 ```
@@ -26,6 +27,8 @@ config commit -m "msg" # Commit changes
 config push            # Push to remote
 config pull            # Pull updates
 ```
+
+Pre-commit hook prevents accidental commits of sensitive files.
 
 ### Convenience Aliases
 
@@ -50,31 +53,29 @@ clist    # config ls-tree -r main --name-only
 
 ## Directory Management Guide
 
-### 🔒 Protected Directories (Never Track)
-
-These directories contain sensitive data and are blocked by `.gitignore` and pre-commit hook:
-
-- **`.ssh/`** - SSH keys and authorized_keys
-- **`.aws/`** - AWS credentials and configuration
-- **`.docker/`** - Docker credentials and context
-- **`.gnupg/`** - GPG keys
-- Any files matching: `*.pem`, `*.key`, `*_rsa`, `*.p12`, `*.credentials`
-
-### 🚫 System Directories (Excluded by Default)
-
-These are framework files, caches, and system data - don't track:
-
-- **`.oh-my-zsh/`** - Oh My Zsh framework (reinstall on new machines)
-- **`.nvm/`** - Node Version Manager (reinstall on new machines)
-- **`.npm/`** - npm cache
-- **`.cache/`** - Application cache files
-- **`.local/`** - Local application data
-- **`.Trash/`** - System trash
-- **`.DS_Store`** - macOS Finder metadata
-- **`.zsh_sessions/`** - Zsh session data
-- **`.zsh_history`** - Command history (may contain sensitive data)
-- **`.viminfo`** - Vim session info
-- **`.CFUserTextEncoding`** - System encoding file
+| Directory/File Pattern | Description | Status |
+|------------------------|-------------|--------|
+| `.ssh/` | SSH keys and authorized_keys | Never tracked - protected |
+| `.aws/` | AWS credentials and configuration | Never tracked - protected |
+| `.docker/` | Docker credentials and context | Never tracked - protected |
+| `.gnupg/` | GPG keys | Never tracked - protected |
+| `.claude.json` | Claude API credentials | Never tracked - protected |
+| `*.pem` | PEM certificate files | Never tracked - protected |
+| `*.key` | Private key files | Never tracked - protected |
+| `*_rsa` | RSA key files | Never tracked - protected |
+| `*.p12` | PKCS#12 certificate files | Never tracked - protected |
+| `*.credentials` | Credential files | Never tracked - protected |
+| `.oh-my-zsh/` | Oh My Zsh framework (reinstall on new machines) | Excluded |
+| `.nvm/` | Node Version Manager (reinstall on new machines) | Excluded |
+| `.npm/` | npm cache | Excluded |
+| `.cache/` | Application cache files | Excluded |
+| `.local/` | Local application data | Excluded |
+| `.Trash/` | System trash | Excluded |
+| `.DS_Store` | macOS Finder metadata | Excluded |
+| `.zsh_sessions/` | Zsh session data | Excluded |
+| `.zsh_history` | Command history (may contain sensitive data) | Excluded |
+| `.viminfo` | Vim session info | Excluded |
+| `.CFUserTextEncoding` | System encoding file | Excluded |
 
 ### 📦 Separate Git Repositories
 
@@ -83,56 +84,6 @@ These directories maintain their own version control:
 - **`.claude/`** - Claude Code configuration
   - Repository: https://github.com/andrew-tomago/.claude.git
   - Install separately: `git clone https://github.com/andrew-tomago/.claude.git ~/.claude`
-  - Has independent git history and lifecycle
-
-### ✅ Potentially Useful to Track
-
-Consider tracking these if you customize them:
-
-#### Application Configurations
-
-**`.config/`** - Modern XDG-compliant application configs:
-```bash
-# Example: Track GitHub CLI settings
-vim ~/.gitignore
-# Add these lines:
-# !.config/
-# !.config/gh/
-# !.config/gh/**
-
-config add .config/gh/
-config commit -m "Add GitHub CLI configuration"
-```
-
-**`.cursor/`** - Cursor editor settings:
-```bash
-# If you use Cursor and want to sync settings
-vim ~/.gitignore
-# Add: !.cursor/
-# Add: !.cursor/settings.json
-
-config add .cursor/settings.json
-config commit -m "Add Cursor editor settings"
-```
-
-#### Editor Configurations
-
-- **`.vimrc`** - Vim configuration
-- **`.tmux.conf`** - Tmux configuration
-- **`.editorconfig`** - Editor consistency settings
-
-#### Shell Enhancements
-
-- **`.aliases`** - Custom shell aliases
-- **`.functions`** - Custom shell functions
-- **`.exports`** - Environment variables (non-sensitive)
-
-#### Language-Specific
-
-- **`.npmrc`** - npm configuration (exclude auth tokens!)
-- **`.gemrc`** - Ruby gem configuration
-- **`.pypirc`** - Python package index config (exclude credentials!)
-- **`.Rprofile`** - R configuration
 
 ### How to Add New Configurations
 
@@ -177,18 +128,6 @@ config commit -m "Add gh CLI and Starship configs"
 config push
 ```
 
-## Security
-
-### Never Tracked
-
-- `.ssh/` - SSH keys
-- `.claude.json` - API credentials
-- `*.pem`, `*.key` - Private keys
-- `.aws/` - AWS credentials
-- Password or secret files
-
-Pre-commit hook prevents accidental commits of sensitive files.
-
 ### Adding New Files Safely
 
 Always verify before committing:
@@ -225,16 +164,6 @@ config add .zshrc       # Stages ~/.zshrc
 config commit -m "msg"  # Commits to ~/.dotfiles.git
 config push             # Pushes to remote
 ```
-
-### Important Configuration
-
-The repository is configured to hide untracked files:
-
-```bash
-config config --local status.showUntrackedFiles no
-```
-
-Without this, `config status` would show every file in your home directory.
 
 ## Troubleshooting
 
@@ -297,3 +226,53 @@ chmod +x ~/.dotfiles.git/hooks/pre-commit
 
 - [Bare Git Repository Tutorial](https://www.atlassian.com/git/tutorials/dotfiles)
 - [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+- [Dotfiles: Best way to store in a bare git repository](https://developer.atlassian.com/blog/2016/02/best-way-to-store-dotfiles-git-bare-repo/)
+
+## [Future] Potentially Useful to Track
+
+Consider tracking these if you customize them:
+
+#### Application Configurations
+
+**`.config/`** - Modern XDG-compliant application configs:
+```bash
+# Example: Track GitHub CLI settings
+vim ~/.gitignore
+# Add these lines:
+# !.config/
+# !.config/gh/
+# !.config/gh/**
+
+config add .config/gh/
+config commit -m "Add GitHub CLI configuration"
+```
+
+**`.cursor/`** - Cursor editor settings:
+```bash
+# If you use Cursor and want to sync settings
+vim ~/.gitignore
+# Add: !.cursor/
+# Add: !.cursor/settings.json
+
+config add .cursor/settings.json
+config commit -m "Add Cursor editor settings"
+```
+
+#### Editor Configurations
+
+- **`.vimrc`** - Vim configuration
+- **`.tmux.conf`** - Tmux configuration
+- **`.editorconfig`** - Editor consistency settings
+
+#### Shell Enhancements
+
+- **`.aliases`** - Custom shell aliases
+- **`.functions`** - Custom shell functions
+- **`.exports`** - Environment variables (non-sensitive)
+
+#### Language-Specific
+
+- **`.npmrc`** - npm configuration (exclude auth tokens!)
+- **`.gemrc`** - Ruby gem configuration
+- **`.pypirc`** - Python package index config (exclude credentials!)
+- **`.Rprofile`** - R configuration
