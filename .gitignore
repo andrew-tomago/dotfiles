@@ -9,6 +9,7 @@
 !.gitignore_global
 !.gitignore
 !.dotfiles-install.sh
+!setup-new-macbook.sh
 !README.md
 !CLAUDE.md
 
