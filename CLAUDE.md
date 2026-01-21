@@ -37,8 +37,15 @@ Pre-commit hook enforces this. If hook blocks commit, DO NOT bypass.
 | .gitignore | Dotfiles whitelist rules |
 | .gitignore_global | Global ignores |
 | .dotfiles-install.sh | Bootstrap script |
+| setup-new-macbook.sh | macOS dev environment setup |
 | README.md | Documentation |
 | CLAUDE.md | This file |
+
+## Related Documentation
+Changes to this repo (especially setup-new-macbook.sh) should be synced to:
+- **MacBook Setup Checklist Gist**: https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212
+
+Update the gist when adding/removing tools from setup-new-macbook.sh.
 
 ## Excluded Directories (Separate Concerns)
 - .claude/ - Separate git repository (SuperClaude framework)
