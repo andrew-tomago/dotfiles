@@ -77,13 +77,10 @@ clist    # config ls-tree -r main --name-only
 | `.viminfo` | Vim session info | Excluded |
 | `.CFUserTextEncoding` | System encoding file | Excluded |
 
-### 📦 Separate Git Repositories
+#### Separate Git Repositories
 
-These directories maintain their own version control:
-
-- **`.claude/`** - Claude Code configuration
-  - Repository: https://github.com/andrew-tomago/.claude.git
-  - Install separately: `git clone https://github.com/andrew-tomago/.claude.git ~/.claude`
+- **`.claude/`** - Claude Code workflows separately versioned
+  - [Repository](https://github.com/andrew-tomago/.claude) Install: `git clone https://github.com/andrew-tomago/.claude.git ~/.claude`
 
 ### How to Add New Configurations
 
