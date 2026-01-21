@@ -3,9 +3,24 @@
 # setup-new-macbook.sh - Comprehensive macOS Development Environment Setup
 # =============================================================================
 #
-# This script sets up a fresh macOS installation with development tools.
-# It is idempotent - safe to run multiple times. Existing installations
-# will be updated rather than reinstalled.
+# WHAT THIS DOES:
+#   Sets up a fresh macOS with dev tools: Xcode CLI, Homebrew, Zsh, Node,
+#   Docker, Claude Code, and more. Idempotent - safe to run multiple times.
+#
+# PREREQUISITES:
+#   - macOS (tested on Sonoma+)
+#   - Internet connection
+#   - Admin account (for sudo)
+#
+# WILL PROMPT FOR:
+#   - sudo password (Homebrew, Xcode, shell changes)
+#   - Rosetta 2 license (Apple Silicon only)
+#   - Chrome may open to set as default browser
+#
+# LONG-RUNNING STEPS:
+#   - Xcode CLI Tools: 5-20 minutes (depends on connection)
+#   - Homebrew install: 2-5 minutes
+#   - Docker Desktop: 1-3 minutes download
 #
 # Installation Order (dependencies matter):
 #   1. Xcode Command Line Tools (required for git, compilers)
@@ -28,8 +43,14 @@
 #
 # =============================================================================
 
-set -e  # Exit on error
-set -o pipefail  # Exit on pipe failure
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+
+# =============================================================================
+# Error Handling
+# =============================================================================
+
+# Trap errors and provide context
+trap 'print_error "Failed at line $LINENO: $BASH_COMMAND"' ERR
 
 # =============================================================================
 # Configuration
@@ -117,7 +138,7 @@ print_success() {
 }
 
 print_error() {
-    echo -e "  ${CROSS_MARK} ${RED}$1${NC}"
+    echo -e "  ${CROSS_MARK} ${RED}$1${NC}" >&2
 }
 
 print_warning() {
@@ -157,6 +178,16 @@ command_exists() {
     command -v "$1" &> /dev/null
 }
 
+# Centralized Homebrew requirement check
+require_brew() {
+    if ! command_exists brew; then
+        print_error "Homebrew is required but not installed."
+        print_info "Run the Homebrew installation step first."
+        return 1
+    fi
+    return 0
+}
+
 brew_package_installed() {
     brew list --formula "$1" &> /dev/null 2>&1
 }
@@ -174,6 +205,64 @@ app_installed() {
 }
 
 # =============================================================================
+# Package Installation Helper (with retry on failure for diagnostics)
+# =============================================================================
+
+# Install a brew formula, showing stderr only on failure
+brew_install_formula() {
+    local package="$1"
+    local output
+    local exit_code
+
+    # First attempt - capture output
+    if output=$(brew install "$package" 2>&1); then
+        return 0
+    else
+        exit_code=$?
+        # Show the error output on failure
+        print_error "brew install $package failed:"
+        echo "$output" >&2
+        return $exit_code
+    fi
+}
+
+# Install a brew cask, showing stderr only on failure
+brew_install_cask() {
+    local cask="$1"
+    local output
+    local exit_code
+
+    # First attempt - capture output
+    if output=$(brew install --cask "$cask" 2>&1); then
+        return 0
+    else
+        exit_code=$?
+        # Show the error output on failure
+        print_error "brew install --cask $cask failed:"
+        echo "$output" >&2
+        return $exit_code
+    fi
+}
+
+# Install an npm package, showing stderr only on failure
+npm_install_global() {
+    local package="$1"
+    local output
+    local exit_code
+
+    # First attempt - capture output
+    if output=$(npm install -g "$package" 2>&1); then
+        return 0
+    else
+        exit_code=$?
+        # Show the error output on failure
+        print_error "npm install -g $package failed:"
+        echo "$output" >&2
+        return $exit_code
+    fi
+}
+
+# =============================================================================
 # Xcode Command Line Tools
 # =============================================================================
 
@@ -186,7 +275,7 @@ install_xcode_cli_tools() {
 
         # Check for Xcode CLI updates via softwareupdate
         if softwareupdate --list 2>&1 | grep -q "Command Line Tools"; then
-            print_info "Updates available, installing..."
+            print_info "Updates available - this may take several minutes..."
             sudo softwareupdate --install "Command Line Tools for Xcode" --agree-to-license || true
             print_success "Xcode CLI Tools updated"
         else
@@ -196,13 +285,14 @@ install_xcode_cli_tools() {
     fi
 
     print_step "Installing Xcode Command Line Tools..."
-    print_info "This may take several minutes and require your password"
+    print_info "This may take 5-20 minutes depending on your connection"
+    print_info "A dialog will appear - click 'Install' to proceed"
 
     # Trigger the install prompt
     xcode-select --install &> /dev/null || true
 
     # Wait for installation to complete
-    print_step "Waiting for installation to complete..."
+    print_step "Waiting for installation to complete (this takes a while)..."
     until xcode-select --print-path &> /dev/null; do
         sleep 5
     done
@@ -238,7 +328,7 @@ install_rosetta() {
     fi
 
     # Check if Rosetta is already installed
-    if /usr/bin/pgrep -q oahd; then
+    if /usr/bin/pgrep -q oahd 2>/dev/null; then
         print_success "Rosetta 2 already installed and running"
         return 0
     fi
@@ -250,6 +340,7 @@ install_rosetta() {
     fi
 
     print_step "Installing Rosetta 2 for Apple Silicon..."
+    print_info "You may be prompted to agree to the license"
     softwareupdate --install-rosetta --agree-to-license
 
     print_success "Rosetta 2 installed"
@@ -267,11 +358,14 @@ install_homebrew() {
 
     if command_exists brew; then
         print_success "Homebrew already installed at $(brew --prefix)"
+
         print_step "Updating Homebrew..."
+        print_info "This may take a minute..."
         brew update
         print_success "Homebrew updated"
 
         print_step "Upgrading installed packages..."
+        print_info "This may take several minutes for large upgrades..."
         brew upgrade || true
         print_success "Packages upgraded"
 
@@ -282,7 +376,8 @@ install_homebrew() {
     fi
 
     print_step "Installing Homebrew..."
-    print_info "This will require your password"
+    print_info "This will take 2-5 minutes and requires your password"
+    print_info "The installer may appear to hang - this is normal"
 
     # Install Homebrew (non-interactive)
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -323,23 +418,20 @@ install_homebrew() {
 install_gnu_utils() {
     print_section "GNU Core Utilities"
 
-    if ! command_exists brew; then
-        print_error "Homebrew not installed. Skipping GNU utilities."
-        return 1
-    fi
+    require_brew || return 1
 
     print_info "Installing GNU utilities (these replace outdated macOS versions)"
 
     local installed=0
-    local updated=0
+    local skipped=0
 
     for package in "${GNU_PACKAGES[@]}"; do
         if brew_package_installed "$package"; then
             print_info "$package already installed"
-            ((updated++))
+            ((skipped++))
         else
             print_step "Installing $package..."
-            if brew install "$package" 2>/dev/null; then
+            if brew_install_formula "$package"; then
                 print_success "$package installed"
                 ((installed++))
             else
@@ -353,7 +445,7 @@ install_gnu_utils() {
     print_info "To use without prefix, add to PATH: export PATH=\"\$(brew --prefix)/opt/coreutils/libexec/gnubin:\$PATH\""
 
     echo ""
-    print_info "Summary: $installed installed, $updated already present"
+    print_info "Summary: $installed installed, $skipped already present"
 }
 
 # =============================================================================
@@ -363,13 +455,10 @@ install_gnu_utils() {
 install_homebrew_packages() {
     print_section "Homebrew CLI Packages"
 
-    if ! command_exists brew; then
-        print_error "Homebrew not installed. Skipping packages."
-        return 1
-    fi
+    require_brew || return 1
 
     local installed=0
-    local updated=0
+    local upgraded=0
     local failed=0
 
     for package in "${HOMEBREW_PACKAGES[@]}"; do
@@ -378,14 +467,14 @@ install_homebrew_packages() {
             # Check if upgrade available
             if brew outdated "$package" &> /dev/null; then
                 print_step "Upgrading $package..."
-                if brew upgrade "$package" 2>/dev/null; then
+                if brew upgrade "$package" 2>&1; then
                     print_success "$package upgraded"
-                    ((updated++))
+                    ((upgraded++))
                 fi
             fi
         else
             print_step "Installing $package..."
-            if brew install "$package" 2>/dev/null; then
+            if brew_install_formula "$package"; then
                 print_success "$package installed"
                 ((installed++))
             else
@@ -396,7 +485,7 @@ install_homebrew_packages() {
     done
 
     echo ""
-    print_info "Summary: $installed installed, $updated upgraded, $failed failed"
+    print_info "Summary: $installed installed, $upgraded upgraded, $failed failed"
 }
 
 # =============================================================================
@@ -406,10 +495,9 @@ install_homebrew_packages() {
 install_homebrew_casks() {
     print_section "Homebrew Cask Applications"
 
-    if ! command_exists brew; then
-        print_error "Homebrew not installed. Skipping cask applications."
-        return 1
-    fi
+    require_brew || return 1
+
+    print_info "Installing desktop applications (this may take a few minutes)..."
 
     local installed=0
     local skipped=0
@@ -421,7 +509,11 @@ install_homebrew_casks() {
             ((skipped++))
         else
             print_step "Installing $cask..."
-            if brew install --cask "$cask" 2>/dev/null; then
+            # Docker is large, give extra notice
+            if [[ "$cask" == "docker" ]]; then
+                print_info "Docker Desktop is ~600MB - this may take 1-3 minutes..."
+            fi
+            if brew_install_cask "$cask"; then
                 print_success "$cask installed"
                 ((installed++))
             else
@@ -454,7 +546,7 @@ configure_zsh() {
 
     if [ ! -f "$brew_zsh" ]; then
         print_warning "Homebrew zsh not found at $brew_zsh"
-        print_info "Using system zsh: $(which zsh)"
+        print_info "Using system zsh: $(command -v zsh || echo 'not found')"
         return 0
     fi
 
@@ -462,7 +554,7 @@ configure_zsh() {
 
     # Check if it's already in /etc/shells
     if ! grep -q "$brew_zsh" /etc/shells; then
-        print_step "Adding Homebrew zsh to /etc/shells..."
+        print_step "Adding Homebrew zsh to /etc/shells (requires sudo)..."
         echo "$brew_zsh" | sudo tee -a /etc/shells > /dev/null
         print_success "Added to /etc/shells"
     else
@@ -470,7 +562,7 @@ configure_zsh() {
     fi
 
     # Check current default shell
-    if [ "$SHELL" != "$brew_zsh" ]; then
+    if [ "${SHELL:-}" != "$brew_zsh" ]; then
         print_step "Setting Homebrew zsh as default shell..."
         chsh -s "$brew_zsh"
         print_success "Default shell changed to Homebrew zsh"
@@ -501,6 +593,7 @@ install_oh_my_zsh() {
     fi
 
     print_step "Installing Oh My Zsh..."
+    print_info "This will download and configure Oh My Zsh"
 
     # Install Oh My Zsh (non-interactive, don't change shell - we handle that)
     RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -523,7 +616,7 @@ install_nvm() {
     print_info "NVM provides flexibility to switch between Node versions"
     print_info "Homebrew Node is also installed for general use"
 
-    export NVM_DIR="$HOME/.nvm"
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 
     if [ -d "$NVM_DIR" ]; then
         print_success "NVM already installed"
@@ -531,8 +624,12 @@ install_nvm() {
         # Source NVM for current session
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-        print_step "Current version: $(nvm --version 2>/dev/null || echo 'unknown')"
+        local current_version
+        current_version=$(nvm --version 2>/dev/null || echo 'unknown')
+        print_step "Current version: $current_version"
+
         print_step "Checking for updates..."
+        print_info "This will checkout the latest NVM release tag"
 
         # Update NVM by fetching latest tag
         (
@@ -540,13 +637,15 @@ install_nvm() {
             git fetch --tags origin
             local latest_tag
             latest_tag=$(git describe --abbrev=0 --tags --match "v[0-9]*" "$(git rev-list --tags --max-count=1)")
+            print_info "Moving NVM to latest tag: $latest_tag"
             git checkout "$latest_tag" --quiet
-        ) && print_success "NVM updated" || print_warning "Update check failed"
+        ) && print_success "NVM updated to latest release" || print_warning "Update check failed"
 
         return 0
     fi
 
     print_step "Installing NVM $NVM_VERSION..."
+    print_info "This will download and configure NVM"
 
     # Install NVM
     curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
@@ -559,6 +658,7 @@ install_nvm() {
 
         # Install latest LTS Node via NVM
         print_step "Installing latest LTS Node.js via NVM..."
+        print_info "This may take a minute..."
         nvm install --lts
         nvm alias default 'lts/*'
         print_success "Node.js LTS installed via NVM: $(nvm current)"
@@ -580,7 +680,7 @@ install_npm_packages() {
         return 1
     fi
 
-    print_info "Using npm from: $(which npm)"
+    print_info "Using npm from: $(command -v npm)"
     print_info "Node version: $(node --version)"
 
     local installed=0
@@ -593,7 +693,7 @@ install_npm_packages() {
             ((skipped++))
         else
             print_step "Installing $package..."
-            if npm install -g "$package" 2>/dev/null; then
+            if npm_install_global "$package"; then
                 print_success "$package installed"
                 ((installed++))
             else
@@ -626,6 +726,7 @@ install_claude_code() {
     fi
 
     print_step "Installing Claude Code..."
+    print_info "This will download and install the Claude Code CLI"
 
     # Install Claude Code
     curl -fsSL https://claude.ai/install.sh | bash
@@ -701,6 +802,7 @@ configure_default_browser() {
 
     # Attempt to open Chrome's default browser prompt
     print_step "Opening Chrome to prompt for default browser..."
+    print_info "Chrome will open - you may see a dialog to set it as default"
     open -a "Google Chrome" --args --make-default-browser 2>/dev/null || true
 }
 
@@ -785,7 +887,7 @@ print_summary() {
     fi
 
     # NVM
-    if [ -d "$HOME/.nvm" ]; then
+    if [ -d "${NVM_DIR:-$HOME/.nvm}" ]; then
         echo -e "    ${CHECK_MARK} NVM"
     else
         echo -e "    ${CROSS_MARK} NVM"
@@ -810,7 +912,7 @@ print_summary() {
     fi
 
     # Codex
-    if npm_package_installed "@openai/codex" 2>/dev/null; then
+    if command_exists npm && npm_package_installed "@openai/codex" 2>/dev/null; then
         echo -e "    ${CHECK_MARK} OpenAI Codex"
     else
         echo -e "    ${CROSS_MARK} OpenAI Codex"
@@ -819,13 +921,17 @@ print_summary() {
     echo ""
     echo -e "  ${BOLD}GNU Core Utilities:${NC}"
     echo ""
-    for package in "${GNU_PACKAGES[@]}"; do
-        if brew_package_installed "$package" 2>/dev/null; then
-            echo -e "    ${CHECK_MARK} $package"
-        else
-            echo -e "    ${CROSS_MARK} $package"
-        fi
-    done
+    if command_exists brew; then
+        for package in "${GNU_PACKAGES[@]}"; do
+            if brew_package_installed "$package" 2>/dev/null; then
+                echo -e "    ${CHECK_MARK} $package"
+            else
+                echo -e "    ${CROSS_MARK} $package"
+            fi
+        done
+    else
+        echo -e "    ${CROSS_MARK} (Homebrew not installed)"
+    fi
 
     echo ""
     echo -e "  ${BOLD}Applications:${NC}"
@@ -871,10 +977,13 @@ print_summary() {
         echo ""
     fi
 
-    if ! gh auth status &> /dev/null 2>&1; then
-        echo -e "    3. ${CYAN}Authenticate GitHub CLI:${NC}"
-        echo -e "       gh auth login"
-        echo ""
+    # Only check gh auth if gh is installed
+    if command_exists gh; then
+        if ! gh auth status &> /dev/null 2>&1; then
+            echo -e "    3. ${CYAN}Authenticate GitHub CLI:${NC}"
+            echo -e "       gh auth login"
+            echo ""
+        fi
     fi
 
     if app_installed "Docker" && ! docker info &> /dev/null 2>&1; then
@@ -898,6 +1007,9 @@ main() {
     echo -e "  ${INFO} Architecture: $(uname -m)"
     echo -e "  ${INFO} macOS Version: $(sw_vers -productVersion)"
     echo -e "  ${INFO} Homebrew Prefix: $(get_homebrew_prefix)"
+    echo ""
+    print_info "This script will prompt for sudo at various points."
+    print_info "Long-running steps will be noted before they begin."
 
     # Run installation steps in order
     install_xcode_cli_tools
