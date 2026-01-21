@@ -1,0 +1,50 @@
+# Strategy: Ignore everything, explicitly track what's needed
+
+# IGNORE EVERYTHING BY DEFAULT
+*
+
+# === Explicitly Track Configuration Files ===
+!.zshrc
+!.gitconfig
+!.gitignore_global
+!.gitignore
+!.dotfiles-install.sh
+!DOTFILES-README.md
+
+# === SECURITY: Never Track Sensitive Files ===
+.ssh/
+.claude.json
+.claude.json.backup
+*.pem
+*.key
+*_rsa
+*.p12
+
+# === System Files to Exclude ===
+.DS_Store
+.Trash/
+.cache/
+.local/
+.npm/
+.nvm/
+.docker/
+.oh-my-zsh/
+.zsh_sessions/
+.zsh_history
+.zcompdump*
+.viminfo
+.CFUserTextEncoding
+
+# === Separate Git Repositories ===
+.claude/
+
+# === Application Data ===
+Library/
+Applications/
+Desktop/
+Documents/
+Downloads/
+Movies/
+Music/
+Pictures/
+Public/

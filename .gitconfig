@@ -1,0 +1,37 @@
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[user]
+	name = Andrew Tom
+	email = andrewtom.careers@gmail.com
+[core]
+	; Disables compression when transferring objects.
+	; Trades network bandwidth for CPU speed. Useful on fast networks or slow CPUs
+	compression = 0
+	
+	; Converts Windows line endings (CRLF) to Unix (LF) on commit,
+	; but never converts on checkout. Good for Unix/Mac users collab with Windows users
+	autocrlf = input
+
+	; Git treats File.txt and file.txt as different files (overrides macOS default)
+	ignorecase = false
+	excludesfile = /Users/tomago/.gitignore_global
+[init]
+	defaultBranch = main
+[commit]
+	verbose = true
+[push]
+	default = current
+[diff]
+	colorMoved = true ; give moved lines their own colour. Only works when paging with color
+	compactionheuristic = true
+[fetch]
+	prune = true
+	writeCommitGraph = true
+[merge]
+	conflictstyle = diff3
+[pull]
+	ff = only

@@ -1,0 +1,27 @@
+# Global gitignore - Personal/Tool-Specific Files
+#
+# Global gitignore is for:
+# - Personal preferences (your choice of IDE/editor)
+# - OS-specific files (not everyone uses macOS)
+# - Personal tooling (Conductor, Claude settings)
+#
+# Project gitignore is for:
+# - Language-specific build artifacts (team agrees on Python)
+# - Framework outputs (team uses MkDocs, pytest)
+# - Package manager files (team uses uv)
+
+# IDE/Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Personal dev tools
+attached_assets/
+.conductor/
+.claude/settings.local.json
