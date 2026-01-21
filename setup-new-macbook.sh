@@ -28,14 +28,15 @@
 #   3. Homebrew (package manager)
 #   4. GNU Core Utilities (modern CLI tools)
 #   5. Homebrew CLI Packages (git, zsh, node, gh, etc.)
-#   6. Homebrew Cask Applications (Raycast, Chrome, Docker, etc.)
-#   7. Zsh Configuration (set Homebrew zsh as default)
-#   8. Oh My Zsh (zsh framework)
-#   9. NVM (Node version manager - optional, for multiple Node versions)
-#  10. npm Global Packages (Codex)
-#  11. Claude Code (AI coding assistant)
-#  12. GitHub CLI Configuration
-#  13. Default Browser Configuration (Chrome)
+#   6. Modern CLI Tools Config (zoxide, lsd, bat, tealdeer post-install)
+#   7. Homebrew Cask Applications (Raycast, Chrome, Docker, etc.)
+#   8. Zsh Configuration (set Homebrew zsh as default)
+#   9. Oh My Zsh (zsh framework)
+#  10. NVM (Node version manager - optional, for multiple Node versions)
+#  11. npm Global Packages (Codex)
+#  12. Claude Code (AI coding assistant)
+#  13. GitHub CLI Configuration
+#  14. Default Browser Configuration (Chrome)
 #
 # Usage:
 #   chmod +x setup-new-macbook.sh
@@ -76,6 +77,10 @@ HOMEBREW_PACKAGES=(
     "tree"         # Directory tree viewer
     "wget"         # Web file retriever
     "curl"         # URL transfer tool
+    "zoxide"       # Smarter cd command (tracks frecency)
+    "lsd"          # Modern ls with colors/icons
+    "bat"          # Cat with syntax highlighting
+    "tealdeer"     # Fast tldr pages client
 )
 
 # Homebrew Cask applications
@@ -486,6 +491,41 @@ install_homebrew_packages() {
 
     echo ""
     print_info "Summary: $installed installed, $upgraded upgraded, $failed failed"
+}
+
+# =============================================================================
+# Modern CLI Tools Configuration
+# =============================================================================
+
+configure_modern_cli_tools() {
+    print_section "Modern CLI Tools Configuration"
+
+    # tealdeer: Update cache for tldr pages
+    if command_exists tldr; then
+        print_step "Updating tealdeer cache..."
+        if tldr --update &> /dev/null; then
+            print_success "tealdeer cache updated"
+        else
+            print_warning "tealdeer cache update failed (run 'tldr --update' manually)"
+        fi
+    fi
+
+    # zoxide: Print shell configuration reminder
+    if command_exists zoxide; then
+        print_info "zoxide installed - add to your .zshrc:"
+        echo -e "    ${CYAN}eval \"\$(zoxide init zsh)\"${NC}"
+    fi
+
+    # lsd: Print optional alias info
+    if command_exists lsd; then
+        print_info "lsd installed - optional alias: alias ls='lsd'"
+        print_info "For full icon support, install a Nerd Font"
+    fi
+
+    # bat: No configuration needed, just confirm
+    if command_exists bat; then
+        print_info "bat installed - use 'bat' instead of 'cat' for syntax highlighting"
+    fi
 }
 
 # =============================================================================
@@ -934,6 +974,38 @@ print_summary() {
     fi
 
     echo ""
+    echo -e "  ${BOLD}Modern CLI Tools:${NC}"
+    echo ""
+
+    # zoxide
+    if command_exists zoxide; then
+        echo -e "    ${CHECK_MARK} zoxide (smarter cd)"
+    else
+        echo -e "    ${CROSS_MARK} zoxide"
+    fi
+
+    # lsd
+    if command_exists lsd; then
+        echo -e "    ${CHECK_MARK} lsd (modern ls)"
+    else
+        echo -e "    ${CROSS_MARK} lsd"
+    fi
+
+    # bat
+    if command_exists bat; then
+        echo -e "    ${CHECK_MARK} bat (syntax highlighting)"
+    else
+        echo -e "    ${CROSS_MARK} bat"
+    fi
+
+    # tealdeer (tldr command)
+    if command_exists tldr; then
+        echo -e "    ${CHECK_MARK} tealdeer (tldr pages)"
+    else
+        echo -e "    ${CROSS_MARK} tealdeer"
+    fi
+
+    echo ""
     echo -e "  ${BOLD}Applications:${NC}"
     echo ""
 
@@ -1017,6 +1089,7 @@ main() {
     install_homebrew
     install_gnu_utils
     install_homebrew_packages
+    configure_modern_cli_tools
     install_homebrew_casks
     configure_zsh
     install_oh_my_zsh
