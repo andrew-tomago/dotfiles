@@ -10,6 +10,7 @@
 !.gitignore
 !.dotfiles-install.sh
 !README.md
+!CLAUDE.md
 
 # === SECURITY: Never Track Sensitive Files ===
 .ssh/
