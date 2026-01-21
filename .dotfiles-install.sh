@@ -3,7 +3,7 @@
 
 set -e
 
-DOTFILES_REPO="https://github.com/alvaldi-atom/dotfiles.git"
+DOTFILES_REPO="https://github.com/andrew-tomago/dotfiles.git"
 DOTFILES_DIR="$HOME/.dotfiles.git"
 BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
 
