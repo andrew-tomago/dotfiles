@@ -197,16 +197,51 @@ brew_package_installed() {
     brew list --formula "$1" &> /dev/null 2>&1
 }
 
-brew_cask_installed() {
-    brew list --cask "$1" &> /dev/null 2>&1
-}
-
-npm_package_installed() {
-    npm list -g "$1" &> /dev/null 2>&1
+# Map cask names to their .app names (cask name → app name without .app)
+get_app_name_for_cask() {
+    case "$1" in
+        google-chrome)   echo "Google Chrome" ;;
+        docker)          echo "Docker" ;;
+        raycast)         echo "Raycast" ;;
+        appcleaner)      echo "AppCleaner" ;;
+        visual-studio-code) echo "Visual Studio Code" ;;
+        slack)           echo "Slack" ;;
+        discord)         echo "Discord" ;;
+        spotify)         echo "Spotify" ;;
+        zoom)            echo "Zoom" ;;
+        firefox)         echo "Firefox" ;;
+        iterm2)          echo "iTerm" ;;
+        rectangle)       echo "Rectangle" ;;
+        1password)       echo "1Password" ;;
+        notion)          echo "Notion" ;;
+        obsidian)        echo "Obsidian" ;;
+        cursor)          echo "Cursor" ;;
+        # Default: capitalize first letter of each hyphenated word
+        *)
+            echo "$1" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+            ;;
+    esac
 }
 
 app_installed() {
     [ -d "/Applications/$1.app" ] || [ -d "$HOME/Applications/$1.app" ]
+}
+
+# Check if cask is installed via brew OR if app exists in Applications
+brew_cask_installed() {
+    local cask="$1"
+    # First check if brew knows about it
+    if brew list --cask "$cask" &> /dev/null 2>&1; then
+        return 0
+    fi
+    # Fall back to checking Applications folder
+    local app_name
+    app_name=$(get_app_name_for_cask "$cask")
+    app_installed "$app_name"
+}
+
+npm_package_installed() {
+    npm list -g "$1" &> /dev/null 2>&1
 }
 
 # =============================================================================
