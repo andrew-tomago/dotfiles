@@ -797,6 +797,9 @@ install_claude_code() {
         print_step "Checking for updates..."
         # Claude Code can self-update
         claude update 2>/dev/null || print_info "Run 'claude update' to check for updates"
+
+        # Add ENABLE_TOOL_SEARCH if not already present
+        configure_claude_code_env
         return 0
     fi
 
@@ -810,15 +813,43 @@ install_claude_code() {
     if command_exists claude; then
         print_success "Claude Code installed"
         print_step "Version: $(claude --version 2>/dev/null || echo 'installed')"
+
+        # Configure Claude Code environment
+        configure_claude_code_env
     else
         # Claude might be installed but not in PATH yet
         if [ -f "$HOME/.claude/local/bin/claude" ]; then
             print_success "Claude Code installed (restart terminal to use)"
+            # Still configure env for future use
+            configure_claude_code_env
         else
             print_error "Claude Code installation may have failed"
             print_info "Try running manually: curl -fsSL https://claude.ai/install.sh | bash"
         fi
     fi
+}
+
+# Configure Claude Code environment variables
+configure_claude_code_env() {
+    if [ ! -f "$HOME/.zshrc" ]; then
+        print_warning ".zshrc not found, skipping Claude Code environment configuration"
+        return 0
+    fi
+
+    # Check if ENABLE_TOOL_SEARCH is already configured
+    if grep -q "ENABLE_TOOL_SEARCH" "$HOME/.zshrc" 2>/dev/null; then
+        print_info "ENABLE_TOOL_SEARCH already configured in .zshrc"
+        return 0
+    fi
+
+    print_step "Configuring Claude Code environment..."
+
+    # Add ENABLE_TOOL_SEARCH to .zshrc
+    echo '' >> "$HOME/.zshrc"
+    echo '# Claude Code tool search configuration' >> "$HOME/.zshrc"
+    echo 'export ENABLE_TOOL_SEARCH=auto:5' >> "$HOME/.zshrc"
+
+    print_success "Added ENABLE_TOOL_SEARCH=auto:5 to .zshrc"
 }
 
 # =============================================================================

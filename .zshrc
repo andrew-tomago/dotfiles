@@ -124,3 +124,6 @@ compdef config=git
 # Modern CLI tools
 eval "$(zoxide init zsh)"
 alias ls='lsd'
+
+# Claude Code tool search configuration
+export ENABLE_TOOL_SEARCH=auto:5
