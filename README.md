@@ -44,12 +44,19 @@ clist    # config ls-tree -r main --name-only
 
 ## Currently Tracked Files
 
-- `.zshrc` - Zsh configuration with Oh My Zsh and NVM
-- `.gitconfig` - Git configuration with gh credential helper
-- `.gitignore_global` - Global git ignores
-- `.gitignore` - Dotfiles repository ignore rules
-- `.dotfiles-install.sh` - Bootstrap installation script
-- `README.md` - This documentation file
+- `.zshrc` - Shell config, aliases, NVM
+- `.gitconfig` - Git settings, gh auth
+- `.gitignore` - Dotfiles whitelist rules
+- `.gitignore_global` - Global ignores
+- `.dotfiles-install.sh` - Bootstrap script
+- `setup-new-macbook.sh` - macOS dev environment setup
+- `README.md` - Documentation
+
+### Important: MacBook Setup Synchronization
+
+Changes to `setup-new-macbook.sh` must be kept in sync with the **MacBook Setup Checklist Gist**: https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212
+
+When adding/removing tools from `setup-new-macbook.sh`, update the gist accordingly.
 
 ## Directory Management Guide
 
@@ -204,6 +211,14 @@ ls -l ~/.dotfiles.git/hooks/pre-commit
 # Make executable if needed
 chmod +x ~/.dotfiles.git/hooks/pre-commit
 ```
+
+## Configuration & Instructions
+
+All critical configuration guidelines and workflow instructions are documented in this file and enforced by the pre-commit hook. This includes:
+- Repository setup and daily usage commands
+- Security rules for sensitive files
+- Workflow for adding new configurations
+- Directory management guidelines
 
 ## Environment
 
