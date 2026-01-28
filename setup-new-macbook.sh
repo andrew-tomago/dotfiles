@@ -95,7 +95,8 @@ HOMEBREW_CASKS=(
 
 # npm global packages
 NPM_PACKAGES=(
-    "@openai/codex"    # OpenAI Codex CLI
+    "@openai/codex"        # OpenAI Codex CLI
+    "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-01-28 | Uninstall: npm uninstall -g @openai/codex-sdk
 )
 
 # Go packages (installed via go install)
