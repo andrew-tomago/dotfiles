@@ -70,9 +70,11 @@ HOMEBREW_PACKAGES=(
     "git"
     "zsh"
     "node"         # Node.js and npm
+    "go"           # Go programming language
     "gh"           # GitHub CLI
     "jq"           # JSON processor
     "ripgrep"      # Fast grep alternative
+    "ast-grep"     # Structural code search tool
     "fd"           # Fast find alternative
     "tree"         # Directory tree viewer
     "wget"         # Web file retriever
@@ -94,6 +96,11 @@ HOMEBREW_CASKS=(
 # npm global packages
 NPM_PACKAGES=(
     "@openai/codex"    # OpenAI Codex CLI
+)
+
+# Go packages (installed via go install)
+GO_PACKAGES=(
+    "github.com/chrishrb/go-grip@latest"    # go-grip - Local GitHub-styled Markdown renderer | Added: 2026-01-28 | Uninstall: rm $(go env GOPATH)/bin/go-grip
 )
 
 # NVM version to install
@@ -526,6 +533,56 @@ install_homebrew_packages() {
 
     echo ""
     print_info "Summary: $installed installed, $upgraded upgraded, $failed failed"
+}
+
+# =============================================================================
+# Go Packages (via go install)
+# =============================================================================
+
+install_go_packages() {
+    print_section "Go Packages"
+
+    if ! command_exists go; then
+        print_warning "Go not installed. Skipping Go packages."
+        return 0
+    fi
+
+    # Ensure GOPATH/bin is in PATH for current session
+    export PATH="$(go env GOPATH)/bin:$PATH"
+
+    local installed=0
+    local skipped=0
+    local failed=0
+
+    for package in "${GO_PACKAGES[@]}"; do
+        # Extract binary name from package path (last segment before @)
+        local binary_name
+        binary_name=$(echo "$package" | sed 's|.*/||; s|@.*||')
+
+        if command_exists "$binary_name"; then
+            print_info "$binary_name already installed"
+            ((skipped++))
+        else
+            print_step "Installing $package..."
+            if go install "$package" 2>&1; then
+                print_success "$binary_name installed"
+                ((installed++))
+            else
+                print_error "Failed to install $binary_name"
+                ((failed++))
+            fi
+        fi
+    done
+
+    # Ensure GOPATH/bin is in shell profile
+    if ! grep -q 'go/bin' "$HOME/.zshrc" 2>/dev/null; then
+        print_step "Adding Go bin to PATH in .zshrc..."
+        # Handled by dotfiles — just remind
+        print_info "Add to .zshrc: export PATH=\"\$HOME/go/bin:\$PATH\""
+    fi
+
+    echo ""
+    print_info "Summary: $installed installed, $skipped already present, $failed failed"
 }
 
 # =============================================================================
@@ -1072,6 +1129,17 @@ print_summary() {
     fi
 
     echo ""
+    echo -e "  ${BOLD}Go Tools:${NC}"
+    echo ""
+
+    # go-grip
+    if command_exists go-grip || [ -f "$(go env GOPATH 2>/dev/null)/bin/go-grip" ]; then
+        echo -e "    ${CHECK_MARK} go-grip (Markdown renderer)"
+    else
+        echo -e "    ${CROSS_MARK} go-grip"
+    fi
+
+    echo ""
     echo -e "  ${BOLD}Applications:${NC}"
     echo ""
 
@@ -1155,6 +1223,7 @@ main() {
     install_homebrew
     install_gnu_utils
     install_homebrew_packages
+    install_go_packages
     configure_modern_cli_tools
     install_homebrew_casks
     configure_zsh

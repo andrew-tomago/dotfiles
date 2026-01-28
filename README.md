@@ -83,6 +83,7 @@ When adding/removing tools from `setup-new-macbook.sh`, update the gist accordin
 | `.zsh_history` | Command history (may contain sensitive data) | Excluded |
 | `.viminfo` | Vim session info | Excluded |
 | `.CFUserTextEncoding` | System encoding file | Excluded |
+| `go/` | Go workspace (GOPATH: packages, binaries) | Excluded |
 
 #### Separate Git Repositories
 
@@ -226,6 +227,7 @@ All critical configuration guidelines and workflow instructions are documented i
 - **Shell**: Zsh with Oh My Zsh
 - **Theme**: robbyrussell
 - **Node**: Managed with NVM
+- **Go**: Homebrew (go-grip for local Markdown rendering)
 - **Git**: Using gh CLI for GitHub integration
 
 ## Repository
