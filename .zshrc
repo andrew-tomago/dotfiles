@@ -126,8 +126,19 @@ eval "$(zoxide init zsh)"
 alias ls='lsd'
 
 # AI CLI aliases
-alias cyolo='claude --dangerously-skip-permissions'
+function cyolo {
+    claude update && \
+    claude plugin update unique@tomago -s user && \
+    claude --dangerously-skip-permissions --model haiku "$@"
+}
+
 alias xyolo='codex --full-auto'
+
+function cplan {
+    claude update && \
+    claude plugin update unique@tomago -s user && \
+    claude --permission-mode plan --model opus "$@"
+}
 
 # Claude Code tool search configuration
 export ENABLE_TOOL_SEARCH=auto:5
