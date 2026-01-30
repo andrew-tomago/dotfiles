@@ -1,6 +1,7 @@
 # (Config) Dotfiles Repo
 
-Personal dotfiles managed with bare git repository method.
+THIS README ONLY APPLIES TO OUR DORFILES REPO AT /Users/tomago/.dotfiles.git
+It's a bare git repository method managing all our local configs.
 
 ## Fresh Installation
 
@@ -52,11 +53,11 @@ clist    # config ls-tree -r main --name-only
 - `setup-new-macbook.sh` - macOS dev environment setup
 - `README.md` - Documentation
 
-### Important: MacBook Setup Synchronization
+### MacBook Setup
 
-Changes to `setup-new-macbook.sh` must be kept in sync with the **MacBook Setup Checklist Gist**: https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212
+`setup-new-macbook.sh` and its companion [MacBook Setup Checklist Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) are the sources of truth for this machine's dev environment. The script is self-documenting—refer to it directly for package lists and installation order.
 
-When adding/removing tools from `setup-new-macbook.sh`, update the gist accordingly.
+**Managing software:** Use the Claude commands at `~/.claude/skills/dotfiles/` (`install-software`, `uninstall-software`) as the primary way to add or remove tools from the setup script. They handle script edits and gist synchronization.
 
 ## Directory Management Guide
 
