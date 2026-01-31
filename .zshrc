@@ -128,7 +128,7 @@ alias ls='lsd'
 # AI CLI aliases
 function cyolo {
     claude update && \
-    claude plugin update unique@tomago -s user && \
+    claude plugin update unique@skill-tree spam@tomago -s user && \
     claude --dangerously-skip-permissions --model haiku "$@"
 }
 
@@ -136,8 +136,8 @@ alias xyolo='codex --full-auto'
 
 function cplan {
     claude update && \
-    claude plugin update unique@tomago -s user && \
-    claude --permission-mode plan --model opus "$@"
+    claude plugin update unique@skill-tree spam@tomago -s user && \
+    claude --dangerously-skip-permissions --permission-mode plan --model opus "$@"
 }
 
 # Claude Code tool search configuration
