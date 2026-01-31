@@ -83,6 +83,8 @@ HOMEBREW_PACKAGES=(
     "lsd"          # Modern ls with colors/icons
     "bat"          # Cat with syntax highlighting
     "tealdeer"     # Fast tldr pages client
+    "duckdb"       # Embeddable SQL OLAP database | Added: 2026-01-31 | Uninstall: brew uninstall duckdb
+    "sqlite"       # SQLite CLI (keg-only) | Added: 2026-01-31 | Uninstall: brew uninstall sqlite
 )
 
 # Homebrew Cask applications
