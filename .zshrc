@@ -151,7 +151,7 @@ function cplan {
     else
         local args=("$@")
     fi
-    claude --dangerously-skip-permissions --permission-mode plan --model opus "${args[@]}"
+    claude --dangerously-skip-permissions --permission-mode plan --model "${args[@]}"
 }
 
 # Claude Code tool search configuration
