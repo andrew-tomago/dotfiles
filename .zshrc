@@ -127,17 +127,31 @@ alias ls='lsd'
 
 # AI CLI aliases
 function cyolo {
-    claude update && \
-    claude plugin update unique@skill-tree spam@tomago -s user && \
-    claude --dangerously-skip-permissions --model haiku "$@"
+    if [[ "$*" == *"--update"* ]]; then
+        claude update && \
+        claude plugin update unique@skill-tree -s user && \
+        claude plugin update spam@tomago -s user
+        # Remove --update from args
+        local args=("${@[@]/--update/}")
+    else
+        local args=("$@")
+    fi
+    claude --dangerously-skip-permissions --model haiku "${args[@]}"
 }
 
 alias xyolo='codex --full-auto'
 
 function cplan {
-    claude update && \
-    claude plugin update unique@skill-tree spam@tomago -s user && \
-    claude --dangerously-skip-permissions --permission-mode plan --model opus "$@"
+    if [[ "$*" == *"--update"* ]]; then
+        claude update && \
+        claude plugin update unique@skill-tree -s user && \
+        claude plugin update spam@tomago -s user
+        # Remove --update from args
+        local args=("${@[@]/--update/}")
+    else
+        local args=("$@")
+    fi
+    claude --dangerously-skip-permissions --permission-mode plan --model opus "${args[@]}"
 }
 
 # Claude Code tool search configuration
