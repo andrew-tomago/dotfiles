@@ -57,7 +57,7 @@ clist    # config ls-tree -r main --name-only
 
 `setup-new-macbook.sh` and its companion [MacBook Setup Checklist Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) are the sources of truth for this machine's dev environment. The script is self-documenting—refer to it directly for package lists and installation order.
 
-**Managing software:** Use the Claude commands at `~/.claude/skills/dotfiles/` (`install-software`, `uninstall-software`) as the primary way to add or remove tools from the setup script. They handle script edits and gist synchronization.
+**Managing software:** Use the `install-software` and `uninstall-software` skills from the `unique@skill-tree` plugin as the primary way to add or remove tools from the setup script. They handle script edits and gist synchronization.
 
 ## Directory Management Guide
 
