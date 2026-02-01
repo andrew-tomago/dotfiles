@@ -229,6 +229,7 @@ All critical configuration guidelines and workflow instructions are documented i
 - **Theme**: robbyrussell
 - **Node**: Managed with NVM
 - **Go**: Homebrew (go-grip for local Markdown rendering)
+- **Python**: uv (fast package/project manager)
 - **Databases**: DuckDB (OLAP), SQLite (keg-only, via Homebrew)
 - **Git**: Using gh CLI for GitHub integration
 
