@@ -470,18 +470,22 @@ install_oh_my_zsh() {
             cd "$HOME/.oh-my-zsh"
             git pull --quiet origin master
         ) && print_success "Oh My Zsh updated" || print_warning "Update check failed"
-        return 0
-    fi
-
-    print_step "Installing Oh My Zsh..."
-    RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-    if [ -d "$HOME/.oh-my-zsh" ]; then
-        print_success "Oh My Zsh installed"
     else
-        print_error "Oh My Zsh installation failed"
-        return 1
+        print_step "Installing Oh My Zsh..."
+        RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+        if [ -d "$HOME/.oh-my-zsh" ]; then
+            print_success "Oh My Zsh installed"
+        else
+            print_error "Oh My Zsh installation failed"
+            return 1
+        fi
     fi
+
+    # Fix insecure directory permissions (prevents compaudit warnings)
+    print_step "Fixing Oh My Zsh directory permissions..."
+    find "$HOME/.oh-my-zsh" -type d -perm /go+w -exec chmod g-w,o-w {} \; 2>/dev/null
+    print_success "Permissions fixed"
 }
 
 # =============================================================================
