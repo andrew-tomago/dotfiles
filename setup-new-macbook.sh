@@ -743,6 +743,65 @@ install_oh_my_zsh() {
 }
 
 # =============================================================================
+# Zshrc Modules Configuration
+# =============================================================================
+
+configure_zshrc_modules() {
+    print_section "Zshrc Modules Configuration"
+
+    local zshrc_d="$HOME/.zshrc.d"
+
+    # Create .zshrc.d directory if it doesn't exist
+    if [ ! -d "$zshrc_d" ]; then
+        print_step "Creating $zshrc_d directory..."
+        mkdir -p "$zshrc_d"
+        print_success "Created $zshrc_d"
+    else
+        print_info "$zshrc_d directory already exists"
+    fi
+
+    # Check if .zshrc is the modular loader (look for ZSHRC_D pattern)
+    if [ -f "$HOME/.zshrc" ] && grep -q 'ZSHRC_D' "$HOME/.zshrc" 2>/dev/null; then
+        print_success "Modular .zshrc loader already configured"
+    else
+        print_warning ".zshrc is not using modular loader"
+        print_info "If you have dotfiles configured, run: config checkout"
+        print_info "Otherwise, update .zshrc manually to source .zshrc.d/*.zsh"
+    fi
+
+    # Ensure 80-macos.zsh exists with macOS-specific config
+    local macos_config="$zshrc_d/80-macos.zsh"
+    if [ -f "$macos_config" ]; then
+        print_info "80-macos.zsh already exists"
+    else
+        print_step "Creating 80-macos.zsh..."
+        cat > "$macos_config" << 'EOF'
+# macOS-specific configuration
+[[ ! "$OSTYPE" == darwin* ]] && return
+
+# Homebrew (Apple Silicon or Intel)
+if [[ "$(uname -m)" == "arm64" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# Go binaries
+export PATH="$HOME/go/bin:$PATH"
+
+# Claude Code tool search
+export ENABLE_TOOL_SEARCH=auto:5
+EOF
+        print_success "Created 80-macos.zsh"
+    fi
+
+    # Check if ENABLE_TOOL_SEARCH is configured somewhere in modules
+    if grep -rq "ENABLE_TOOL_SEARCH" "$zshrc_d" 2>/dev/null; then
+        print_success "ENABLE_TOOL_SEARCH already configured in modules"
+    fi
+}
+
+# =============================================================================
 # NVM (Node Version Manager) - Optional
 # =============================================================================
 
@@ -892,25 +951,21 @@ install_claude_code() {
 
 # Configure Claude Code environment variables
 configure_claude_code_env() {
-    if [ ! -f "$HOME/.zshrc" ]; then
-        print_warning ".zshrc not found, skipping Claude Code environment configuration"
+    local zshrc_d="$HOME/.zshrc.d"
+
+    # Check if ENABLE_TOOL_SEARCH is configured in modular config
+    if [ -d "$zshrc_d" ] && grep -rq "ENABLE_TOOL_SEARCH" "$zshrc_d" 2>/dev/null; then
+        print_info "ENABLE_TOOL_SEARCH already configured in .zshrc.d modules"
         return 0
     fi
 
-    # Check if ENABLE_TOOL_SEARCH is already configured
-    if grep -q "ENABLE_TOOL_SEARCH" "$HOME/.zshrc" 2>/dev/null; then
+    # Fall back to checking .zshrc directly
+    if [ -f "$HOME/.zshrc" ] && grep -q "ENABLE_TOOL_SEARCH" "$HOME/.zshrc" 2>/dev/null; then
         print_info "ENABLE_TOOL_SEARCH already configured in .zshrc"
         return 0
     fi
 
-    print_step "Configuring Claude Code environment..."
-
-    # Add ENABLE_TOOL_SEARCH to .zshrc
-    echo '' >> "$HOME/.zshrc"
-    echo '# Claude Code tool search configuration' >> "$HOME/.zshrc"
-    echo 'export ENABLE_TOOL_SEARCH=auto:5' >> "$HOME/.zshrc"
-
-    print_success "Added ENABLE_TOOL_SEARCH=auto:5 to .zshrc"
+    print_info "ENABLE_TOOL_SEARCH will be configured when zshrc modules are set up"
 }
 
 # =============================================================================
@@ -927,13 +982,18 @@ configure_github_cli() {
 
     print_success "GitHub CLI installed: $(gh --version | head -n1)"
 
-    # Check if already authenticated
+    # Check if already authenticated and configure git credentials
     if gh auth status &> /dev/null; then
         print_success "Already authenticated with GitHub"
         gh auth status
+        # Configure git to use gh for credential helper
+        print_step "Configuring git credential helper..."
+        gh auth setup-git
+        print_success "Git credential helper configured"
     else
         print_info "GitHub CLI not authenticated"
         print_info "Run 'gh auth login' to authenticate with GitHub"
+        print_info "Then run 'gh auth setup-git' to configure git credentials"
     fi
 }
 
@@ -1232,6 +1292,7 @@ main() {
     install_homebrew_casks
     configure_zsh
     install_oh_my_zsh
+    configure_zshrc_modules
     install_nvm
     install_npm_packages
     install_claude_code

@@ -1,0 +1,2 @@
+# Universal PATH additions
+export PATH="$HOME/.local/bin:$PATH"

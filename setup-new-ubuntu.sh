@@ -73,7 +73,7 @@ APT_PACKAGES=(
     "tmux"             # Terminal multiplexer
     "unzip"
     "zip"
-    # TODO: Add your preferred packages
+    "nautilus-share"   # Samba folder sharing in Nautilus
 )
 
 # Modern CLI tools available via apt
@@ -485,6 +485,59 @@ install_oh_my_zsh() {
 }
 
 # =============================================================================
+# Zshrc Modules Configuration
+# =============================================================================
+
+configure_zshrc_modules() {
+    print_section "Zshrc Modules Configuration"
+
+    local zshrc_d="$HOME/.zshrc.d"
+
+    # Create .zshrc.d directory if it doesn't exist
+    if [ ! -d "$zshrc_d" ]; then
+        print_step "Creating $zshrc_d directory..."
+        mkdir -p "$zshrc_d"
+        print_success "Created $zshrc_d"
+    else
+        print_info "$zshrc_d directory already exists"
+    fi
+
+    # Check if .zshrc is the modular loader (look for ZSHRC_D pattern)
+    if [ -f "$HOME/.zshrc" ] && grep -q 'ZSHRC_D' "$HOME/.zshrc" 2>/dev/null; then
+        print_success "Modular .zshrc loader already configured"
+    else
+        print_warning ".zshrc is not using modular loader"
+        print_info "If you have dotfiles configured, run: config checkout"
+        print_info "Otherwise, update .zshrc manually to source .zshrc.d/*.zsh"
+    fi
+
+    # Ensure 85-linux.zsh exists with Linux-specific config
+    local linux_config="$zshrc_d/85-linux.zsh"
+    if [ -f "$linux_config" ]; then
+        print_info "85-linux.zsh already exists"
+    else
+        print_step "Creating 85-linux.zsh..."
+        cat > "$linux_config" << 'EOF'
+# Linux-specific configuration
+[[ ! "$OSTYPE" == linux-gnu* ]] && return
+
+# fd-find / bat fallbacks (Ubuntu renames these packages)
+command -v fdfind &>/dev/null && ! command -v fd &>/dev/null && alias fd='fdfind'
+command -v batcat &>/dev/null && ! command -v bat &>/dev/null && alias bat='batcat'
+
+# Claude Code tool search
+export ENABLE_TOOL_SEARCH=auto:5
+EOF
+        print_success "Created 85-linux.zsh"
+    fi
+
+    # Check if ENABLE_TOOL_SEARCH is configured somewhere
+    if grep -rq "ENABLE_TOOL_SEARCH" "$zshrc_d" 2>/dev/null; then
+        print_success "ENABLE_TOOL_SEARCH already configured in modules"
+    fi
+}
+
+# =============================================================================
 # NVM (Node Version Manager)
 # =============================================================================
 
@@ -644,13 +697,18 @@ install_github_cli() {
         print_success "GitHub CLI installed"
     fi
 
-    # Check auth status
+    # Check auth status and configure git credentials
     if gh auth status &> /dev/null; then
         print_success "Already authenticated with GitHub"
         gh auth status
+        # Configure git to use gh for credential helper
+        print_step "Configuring git credential helper..."
+        gh auth setup-git
+        print_success "Git credential helper configured"
     else
         print_info "GitHub CLI not authenticated"
         print_info "Run 'gh auth login' to authenticate"
+        print_info "Then run 'gh auth setup-git' to configure git credentials"
     fi
 }
 
@@ -878,6 +936,7 @@ main() {
     install_snap_packages
     configure_zsh
     install_oh_my_zsh
+    configure_zshrc_modules
     install_nvm
     install_npm_packages
     install_docker

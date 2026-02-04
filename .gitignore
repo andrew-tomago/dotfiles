@@ -5,6 +5,8 @@
 
 # === Explicitly Track Configuration Files ===
 !.zshrc
+!.zshrc.d/
+!.zshrc.d/*.zsh
 !.gitconfig
 !.gitignore_global
 !.gitignore
@@ -16,12 +18,15 @@
 
 # === SECURITY: Never Track Sensitive Files ===
 .ssh/
+.aws/
+.gnupg/
 .claude.json
 .claude.json.backup
 *.pem
 *.key
 *_rsa
 *.p12
+*.credentials
 
 # === System Files to Exclude ===
 .DS_Store

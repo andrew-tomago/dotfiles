@@ -33,7 +33,7 @@ Pre-commit hook prevents accidental commits of sensitive files.
 
 ### Convenience Aliases
 
-These are automatically added to `.zshrc`:
+These are defined in `.zshrc.d/40-dotfiles.zsh` (loaded via modular `.zshrc`):
 
 ```bash
 cs       # config status
@@ -45,12 +45,14 @@ clist    # config ls-tree -r main --name-only
 
 ## Currently Tracked Files
 
-- `.zshrc` - Shell config, aliases, NVM
+- `.zshrc` - Modular shell loader (sources `.zshrc.d/*.zsh`)
+- `.zshrc.d/*.zsh` - Modular shell configuration modules
 - `.gitconfig` - Git settings, gh auth
 - `.gitignore` - Dotfiles whitelist rules
 - `.gitignore_global` - Global ignores
 - `.dotfiles-install.sh` - Bootstrap script
 - `setup-new-macbook.sh` - macOS dev environment setup
+- `setup-new-ubuntu.sh` - Ubuntu dev environment setup
 - `README.md` - Documentation
 - `CLAUDE.md` - Symlink to `~/.claude/CLAUDE.md` (relative path for portability)
 
@@ -59,6 +61,12 @@ clist    # config ls-tree -r main --name-only
 `setup-new-macbook.sh` and its companion [MacBook Setup Checklist Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) are the sources of truth for this machine's dev environment. The script is self-documenting—refer to it directly for package lists and installation order.
 
 **Managing software:** Use the `install-software` and `uninstall-software` skills from the `unique@skill-tree` plugin as the primary way to add or remove tools from the setup script. They handle script edits and gist synchronization.
+
+### Ubuntu Setup
+
+`setup-new-ubuntu.sh` and its companion [Ubuntu Setup Checklist Gist](https://gist.github.com/andrew-tomago/b13a3bdace6261c747f9124fcbdcee70) are the sources of truth for Ubuntu dev environments. The script installs build essentials, modern CLI tools (ripgrep, fd, bat, fzf, zoxide, lsd), Docker, NVM, GitHub CLI, and Claude Code.
+
+**Shell configuration:** Uses modular `~/.zshrc.d/*.zsh` files for organized, OS-aware shell setup.
 
 ## Directory Management Guide
 
@@ -226,14 +234,25 @@ All critical configuration guidelines and workflow instructions are documented i
 
 ## Environment
 
-- **OS**: macOS (Darwin 25.2.0)
-- **Shell**: Zsh with Oh My Zsh
-- **Theme**: robbyrussell
-- **Node**: Managed with NVM
+Supported platforms with dedicated setup scripts:
+
+### macOS
+- **Setup**: `setup-new-macbook.sh`
+- **Package Manager**: Homebrew
 - **Go**: Homebrew (go-grip for local Markdown rendering)
 - **Python**: uv (fast package/project manager)
-- **Databases**: DuckDB (OLAP), SQLite (keg-only, via Homebrew)
-- **Git**: Using gh CLI for GitHub integration
+- **Databases**: DuckDB (OLAP), SQLite (keg-only)
+
+### Ubuntu
+- **Setup**: `setup-new-ubuntu.sh`
+- **Package Manager**: apt + snap
+- **CLI Tools**: ripgrep, fd-find, bat, fzf, zoxide, lsd
+
+### Common (Both Platforms)
+- **Shell**: Zsh with Oh My Zsh (robbyrussell theme)
+- **Node**: Managed with NVM
+- **Git**: GitHub CLI (`gh`) for authentication
+- **AI**: Claude Code
 
 ## Repository
 
