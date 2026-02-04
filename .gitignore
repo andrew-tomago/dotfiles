@@ -10,6 +10,7 @@
 !.gitignore
 !.dotfiles-install.sh
 !setup-new-macbook.sh
+!setup-new-ubuntu.sh
 !README.md
 !CLAUDE.md
 
