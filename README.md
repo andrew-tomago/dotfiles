@@ -1,6 +1,6 @@
 # (Config) Dotfiles Repo
 
-THIS README ONLY APPLIES TO OUR DORFILES REPO AT /Users/tomago/.dotfiles.git
+THIS README ONLY APPLIES TO OUR DOTFILES REPO AT ~/.dotfiles.git
 It's a bare git repository method managing all our local configs.
 
 ## Fresh Installation
@@ -52,6 +52,7 @@ clist    # config ls-tree -r main --name-only
 - `.dotfiles-install.sh` - Bootstrap script
 - `setup-new-macbook.sh` - macOS dev environment setup
 - `README.md` - Documentation
+- `CLAUDE.md` - Symlink to `~/.claude/CLAUDE.md` (relative path for portability)
 
 ### MacBook Setup
 
@@ -90,6 +91,7 @@ clist    # config ls-tree -r main --name-only
 
 - **`.claude/`** - Claude Code workflows separately versioned
   - [Repository](https://github.com/andrew-tomago/.claude) Install: `git clone https://github.com/andrew-tomago/.claude.git ~/.claude`
+  - **`CLAUDE.md` symlink** - This dotfiles repo tracks a symlink at `~/CLAUDE.md` pointing to `.claude/CLAUDE.md` (relative path). This lets Claude Code find project instructions at the home level while the actual file lives in the `.claude` repo. The relative path ensures portability across machines with different usernames.
 
 ### How to Add New Configurations
 
