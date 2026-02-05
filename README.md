@@ -31,6 +31,22 @@ config pull            # Pull updates
 
 Pre-commit hook prevents accidental commits of sensitive files.
 
+### Agent Skill Usage (Reliable Invocation)
+
+Name the skill ID directly in the first line of your prompt. This avoids ambiguous routing.
+
+| Goal | Use this exact skill name | Prompt template |
+| --- | --- | --- |
+| End-to-end WIN flow | `win-committee` | `Use win-committee. Run committee flow with targets at <path> and content at <path>.` |
+| Build target profiles only | `win-profile` | `Use win-profile. Generate profiles from <targets-path>.` |
+| Score drafts only | `win-evaluate` | `Use win-evaluate. Evaluate <content-path> using <profiles-path> and <committee-path>.` |
+| Generate markdown summary only | `win-summary` | `Use win-summary. Synthesize summary from <committee-matrix-path>.` |
+
+Rules:
+- Put `Use <skill-id>.` first.
+- Repeat the skill ID each turn; skill use is turn-scoped.
+- Prefer exact IDs (`win-committee`, `win-profile`, `win-evaluate`, `win-summary`) over descriptive aliases.
+
 ### Convenience Aliases
 
 These are defined in `.zshrc.d/40-dotfiles.zsh` (loaded via modular `.zshrc`):
