@@ -27,6 +27,9 @@
 *_rsa
 *.p12
 *.credentials
+.env
+.env.*
+!.env.example
 
 # === System Files to Exclude ===
 .DS_Store

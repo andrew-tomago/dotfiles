@@ -1,6 +1,6 @@
 [user]
 	name = Andrew Tom
-	email = andrewtom.careers@gmail.com
+	email = andrew-tomago@users.noreply.github.com
 [core]
 	; Disables compression when transferring objects.
 	; Trades network bandwidth for CPU speed. Useful on fast networks or slow CPUs
