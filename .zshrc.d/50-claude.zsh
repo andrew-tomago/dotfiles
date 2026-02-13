@@ -16,5 +16,5 @@ xyolo() {
 
 # cplan - Run Claude Code in plan mode
 cplan() {
-    claude --plan "$@"
+    claude --dangerously-skip-permissions --permission-mode plan "$@"
 }
