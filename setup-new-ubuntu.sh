@@ -35,7 +35,8 @@
 #  12. Docker (via official repository — independent, heavy)
 #  13. Wine (Windows compatibility layer via WineHQ)
 #  14. Obsidian (Note-taking app via AppImage)
-#  15. Snap Packages (Discord — independent, optional)
+#  15. Cursor (AI-powered code editor via AppImage)
+#  16. Snap Packages (Discord — independent, optional)
 #
 # Usage:
 #   chmod +x setup-new-ubuntu.sh
@@ -698,62 +699,6 @@ install_docker() {
 }
 
 # =============================================================================
-# Cursor IDE (AppImage Installation)
-# =============================================================================
-
-install_cursor() {
-    print_section "Cursor IDE"
-
-    if command_exists cursor || [ -f "$HOME/.local/bin/cursor" ]; then
-        print_success "Cursor already installed"
-        return 0
-    fi
-
-    print_step "Installing Cursor IDE via AppImage..."
-
-    # Install libfuse2 dependency
-    if ! apt_package_installed "libfuse2"; then
-        print_step "Installing libfuse2 dependency..."
-        sudo apt install -y libfuse2
-    fi
-
-    # Create directories
-    mkdir -p "$HOME/.local/bin"
-    mkdir -p "$HOME/.local/share/applications"
-
-    # Download Cursor AppImage
-    local cursor_url="https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable"
-    print_step "Downloading Cursor AppImage..."
-
-    if curl -fsSL "$cursor_url" -o "$HOME/.local/bin/cursor.AppImage"; then
-        chmod +x "$HOME/.local/bin/cursor.AppImage"
-
-        # Create symbolic link
-        ln -sf "$HOME/.local/bin/cursor.AppImage" "$HOME/.local/bin/cursor"
-
-        # Create desktop entry
-        cat > "$HOME/.local/share/applications/cursor.desktop" << 'DESKTOP_EOF'
-[Desktop Entry]
-Name=Cursor
-Exec=$HOME/.local/bin/cursor.AppImage %U
-Terminal=false
-Type=Application
-Icon=cursor
-StartupWMClass=Cursor
-Comment=AI-powered code editor
-MimeType=x-scheme-handler/cursor;
-Categories=Utility;Development;IDE;
-DESKTOP_EOF
-
-        print_success "Cursor installed to ~/.local/bin/cursor"
-        print_info "Launch with: cursor"
-    else
-        print_error "Failed to download Cursor AppImage"
-        return 1
-    fi
-}
-
-# =============================================================================
 # GitHub CLI
 # =============================================================================
 
@@ -962,6 +907,99 @@ EOF
 }
 
 # =============================================================================
+# Cursor (AI-powered Code Editor)
+# =============================================================================
+
+install_cursor() {
+    print_section "Cursor (AI-powered Code Editor)"
+
+    if command_exists cursor; then
+        print_success "Cursor already installed"
+        print_step "Version: $(cursor --version 2>/dev/null | head -n1 || echo 'unknown')"
+        return 0
+    fi
+
+    print_step "Installing Cursor via .deb package..."
+
+    # Cursor provides direct download links from their CDN
+    # They use a standard naming pattern for their Linux builds
+    local arch=$(dpkg --print-architecture)
+    local download_url
+
+    if [ "$arch" = "arm64" ] || [ "$arch" = "aarch64" ]; then
+        download_url="https://downloader.cursor.sh/linux/appImage/arm64"
+        print_warning "ARM64 detected - using AppImage method"
+
+        local install_dir="$HOME/.local/bin"
+        mkdir -p "$install_dir"
+
+        print_step "Downloading Cursor AppImage..."
+        if curl -fsSL "$download_url" -o "$install_dir/cursor"; then
+            chmod +x "$install_dir/cursor"
+            print_success "Cursor installed to $install_dir/cursor"
+
+            # Create desktop entry
+            print_step "Creating desktop entry..."
+            local desktop_file="$HOME/.local/share/applications/cursor.desktop"
+            mkdir -p "$(dirname "$desktop_file")"
+            cat > "$desktop_file" << EOF
+[Desktop Entry]
+Name=Cursor
+Exec=$install_dir/cursor --no-sandbox %U
+Terminal=false
+Type=Application
+Icon=cursor
+StartupWMClass=Cursor
+Comment=AI-powered code editor
+Categories=Development;IDE;
+MimeType=text/plain;
+EOF
+            print_success "Desktop entry created"
+            print_info "Launch from applications menu or run: cursor"
+        else
+            print_error "Failed to download Cursor"
+            return 1
+        fi
+    else
+        # AMD64 - use .deb package
+        download_url="https://downloader.cursor.sh/linux/appImage/x64"
+
+        # For AMD64, try to download the .deb if available
+        # Otherwise fall back to AppImage
+        local temp_deb="/tmp/cursor.deb"
+
+        print_step "Downloading Cursor for AMD64..."
+        # Try the AppImage URL first since it's more reliable
+        if curl -fsSL "$download_url" -o "$HOME/.local/bin/cursor"; then
+            chmod +x "$HOME/.local/bin/cursor"
+            print_success "Cursor installed (AppImage)"
+
+            # Create desktop entry
+            print_step "Creating desktop entry..."
+            local desktop_file="$HOME/.local/share/applications/cursor.desktop"
+            mkdir -p "$(dirname "$desktop_file")"
+            cat > "$desktop_file" << EOF
+[Desktop Entry]
+Name=Cursor
+Exec=$HOME/.local/bin/cursor --no-sandbox %U
+Terminal=false
+Type=Application
+Icon=cursor
+StartupWMClass=Cursor
+Comment=AI-powered code editor
+Categories=Development;IDE;
+MimeType=text/plain;
+EOF
+            print_success "Desktop entry created"
+            print_info "Launch from applications menu or run: cursor"
+        else
+            print_error "Failed to download Cursor"
+            return 1
+        fi
+    fi
+}
+
+# =============================================================================
 # Claude Code
 # =============================================================================
 
@@ -1107,6 +1145,13 @@ print_summary() {
         echo -e "    ${CHECK_MARK} Obsidian"
     else
         echo -e "    ${CROSS_MARK} Obsidian"
+    fi
+
+    # Cursor
+    if command_exists cursor || [ -f "$HOME/.local/bin/cursor" ]; then
+        echo -e "    ${CHECK_MARK} Cursor"
+    else
+        echo -e "    ${CROSS_MARK} Cursor"
     fi
 
     echo ""
@@ -1263,8 +1308,15 @@ main() {
     install_docker
     install_wine
     install_obsidian
+<<<<<<< HEAD
     install_cursor
     install_snap_packages
+||||||| parent of 1066efc (feat(ubuntu): add Cursor IDE installer)
+    install_claude_code
+=======
+    install_cursor
+    install_claude_code
+>>>>>>> 1066efc (feat(ubuntu): add Cursor IDE installer)
     print_dotfiles_reminder
     print_summary
 }
