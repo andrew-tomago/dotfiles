@@ -963,6 +963,9 @@ install_claude_code() {
         print_success "Claude Code already installed"
         claude doctor 2>/dev/null || print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
 
+        print_step "Checking for updates..."
+        claude update 2>/dev/null || print_info "Run 'claude update' to check for updates"
+
         # Add ENABLE_TOOL_SEARCH if not already present
         configure_claude_code_env
         return 0
