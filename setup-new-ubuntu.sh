@@ -770,23 +770,47 @@ setup_claude_config() {
 
 install_claude_code() {
     print_section "Claude Code"
+    # Native installer — no Node.js dependency. Auto-updates in background.
 
     if command_exists claude; then
         print_success "Claude Code already installed"
-        print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
-        claude update 2>/dev/null || print_info "Run 'claude update' to check for updates"
+        claude doctor 2>/dev/null || print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
+
+        # Add ENABLE_TOOL_SEARCH if not already present
+        configure_claude_code_env
         return 0
     fi
 
-    print_step "Installing Claude Code..."
+    print_step "Installing Claude Code via native installer..."
     curl -fsSL https://claude.ai/install.sh | bash
 
     if command_exists claude || [ -f "$HOME/.claude/local/bin/claude" ]; then
         print_success "Claude Code installed"
+        claude doctor 2>/dev/null || true
+
+        # Configure Claude Code environment
+        configure_claude_code_env
     else
         print_error "Claude Code installation may have failed"
         print_info "Try running manually: curl -fsSL https://claude.ai/install.sh | bash"
     fi
+}
+
+# Configure Claude Code environment variables
+configure_claude_code_env() {
+    local zshrc_d="$HOME/.zshrc.d"
+
+    if [ -d "$zshrc_d" ] && grep -rq "ENABLE_TOOL_SEARCH" "$zshrc_d" 2>/dev/null; then
+        print_info "ENABLE_TOOL_SEARCH already configured in .zshrc.d modules"
+        return 0
+    fi
+
+    if [ -f "$HOME/.zshrc" ] && grep -q "ENABLE_TOOL_SEARCH" "$HOME/.zshrc" 2>/dev/null; then
+        print_info "ENABLE_TOOL_SEARCH already configured in .zshrc"
+        return 0
+    fi
+
+    print_info "ENABLE_TOOL_SEARCH will be configured when zshrc modules are set up"
 }
 
 # =============================================================================

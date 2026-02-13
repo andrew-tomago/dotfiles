@@ -956,23 +956,19 @@ setup_claude_config() {
 
 install_claude_code() {
     print_section "Claude Code"
+    # Native installer — no Node.js dependency. Auto-updates in background.
 
     # Check if Claude Code is already installed
     if command_exists claude; then
         print_success "Claude Code already installed"
-        print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
-
-        print_step "Checking for updates..."
-        # Claude Code can self-update
-        claude update 2>/dev/null || print_info "Run 'claude update' to check for updates"
+        claude doctor 2>/dev/null || print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
 
         # Add ENABLE_TOOL_SEARCH if not already present
         configure_claude_code_env
         return 0
     fi
 
-    print_step "Installing Claude Code..."
-    print_info "This will download and install the Claude Code CLI"
+    print_step "Installing Claude Code via native installer..."
 
     # Install Claude Code
     curl -fsSL https://claude.ai/install.sh | bash
@@ -980,7 +976,7 @@ install_claude_code() {
     # Verify installation
     if command_exists claude; then
         print_success "Claude Code installed"
-        print_step "Version: $(claude --version 2>/dev/null || echo 'installed')"
+        claude doctor 2>/dev/null || print_step "Version: $(claude --version 2>/dev/null || echo 'installed')"
 
         # Configure Claude Code environment
         configure_claude_code_env
