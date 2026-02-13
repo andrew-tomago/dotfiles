@@ -33,7 +33,9 @@
 #  10. Claude Config Repository (~/.claude from git)
 #  11. Claude Code (AI coding assistant)
 #  12. Docker (via official repository — independent, heavy)
-#  13. Snap Packages (Discord — independent, optional)
+#  13. Wine (Windows compatibility layer via WineHQ)
+#  14. Obsidian (Note-taking app via AppImage)
+#  15. Snap Packages (Discord — independent, optional)
 #
 # Usage:
 #   chmod +x setup-new-ubuntu.sh
@@ -96,7 +98,6 @@ MANUAL_CLI_TOOLS=(
 # Snap packages (optional GUI apps or tools not in apt)
 SNAP_PACKAGES=(
     "discord"          # Community chat
-    "obsidian --classic"  # Knowledge base and note-taking | Added: 2026-02-13 | Uninstall: sudo snap remove obsidian
 )
 
 # npm global packages
@@ -559,15 +560,28 @@ install_nvm() {
         print_success "NVM already installed"
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-        print_step "Current version: $(nvm --version 2>/dev/null || echo 'unknown')"
-        print_step "Checking for updates..."
+        print_step "Current NVM version: $(nvm --version 2>/dev/null || echo 'unknown')"
+        print_step "Checking for NVM updates..."
         (
             cd "$NVM_DIR"
             git fetch --tags origin
             local latest_tag
             latest_tag=$(git describe --abbrev=0 --tags --match "v[0-9]*" "$(git rev-list --tags --max-count=1)")
             git checkout "$latest_tag" --quiet
-        ) && print_success "NVM updated" || print_warning "Update check failed"
+        ) && print_success "NVM updated" || print_warning "NVM update check failed"
+
+        # Reload NVM after update
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+        # Update Node.js to latest LTS
+        print_step "Current Node.js version: $(node --version 2>/dev/null || echo 'none')"
+        print_step "Installing latest LTS Node.js..."
+        if nvm install --lts; then
+            nvm alias default 'lts/*'
+            print_success "Node.js updated to latest LTS: $(nvm current)"
+        else
+            print_warning "Failed to update Node.js"
+        fi
         return 0
     fi
 
@@ -825,6 +839,129 @@ setup_claude_config() {
 }
 
 # =============================================================================
+# Wine (Windows Compatibility Layer)
+# =============================================================================
+
+install_wine() {
+    print_section "Wine (Windows Compatibility Layer)"
+
+    if command_exists wine; then
+        print_success "Wine already installed: $(wine --version 2>/dev/null || echo 'unknown')"
+        return 0
+    fi
+
+    print_step "Installing Wine via WineHQ repository..."
+
+    # Enable 32-bit architecture (required for Wine)
+    print_step "Enabling 32-bit architecture support..."
+    sudo dpkg --add-architecture i386
+
+    # Download and add WineHQ GPG key (convert to binary format)
+    print_step "Adding WineHQ GPG key..."
+    sudo mkdir -pm755 /etc/apt/keyrings
+    wget -qO- https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/winehq-archive.key
+
+    # Add WineHQ repository
+    print_step "Adding WineHQ repository..."
+    local ubuntu_version
+    ubuntu_version=$(lsb_release -cs)
+    sudo wget -NP /etc/apt/sources.list.d/ "https://dl.winehq.org/wine-builds/ubuntu/dists/${ubuntu_version}/winehq-${ubuntu_version}.sources"
+
+    # Update package list and install Wine
+    print_step "Installing Wine packages..."
+    sudo apt update
+    sudo apt install -y --install-recommends winehq-stable
+
+    if command_exists wine; then
+        print_success "Wine installed: $(wine --version)"
+        print_info "Run 'winecfg' to configure Wine for the first time"
+    else
+        print_error "Wine installation failed"
+        print_info "Visit https://gitlab.winehq.org/wine/wine/-/wikis/Download for manual installation"
+        return 1
+    fi
+}
+
+# =============================================================================
+# Obsidian (Note-taking app)
+# =============================================================================
+
+install_obsidian() {
+    print_section "Obsidian (Note-taking App)"
+
+    local install_dir="$HOME/.local/bin"
+    local obsidian_path="$install_dir/obsidian"
+
+    if [ -f "$obsidian_path" ]; then
+        print_success "Obsidian already installed"
+        print_step "Installed at: $obsidian_path"
+        return 0
+    fi
+
+    print_step "Installing Obsidian AppImage..."
+
+    # Install FUSE library (required for AppImages)
+    if ! apt_package_installed "libfuse2t64"; then
+        print_step "Installing libfuse2t64 (required for AppImages)..."
+        sudo apt install -y libfuse2t64
+        print_success "libfuse2t64 installed"
+    else
+        print_info "libfuse2t64 already installed"
+    fi
+
+    # Create installation directory
+    mkdir -p "$install_dir"
+
+    # Get latest release info from GitHub API
+    print_step "Fetching latest version..."
+    local latest_url
+    local arch=$(uname -m)
+
+    if [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
+        latest_url=$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest | \
+                     grep -o 'https://.*arm64\.AppImage' | head -1)
+    else
+        latest_url=$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest | \
+                     grep -o 'https://.*\.AppImage' | grep -v 'arm64' | head -1)
+    fi
+
+    if [ -z "$latest_url" ]; then
+        print_error "Could not find Obsidian AppImage download URL"
+        return 1
+    fi
+
+    local version=$(echo "$latest_url" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
+    print_step "Downloading Obsidian v${version}..."
+
+    if curl -fsSL "$latest_url" -o "$obsidian_path"; then
+        chmod +x "$obsidian_path"
+        print_success "Obsidian v${version} installed to $obsidian_path"
+
+        # Create desktop entry
+        print_step "Creating desktop entry..."
+        local desktop_file="$HOME/.local/share/applications/obsidian.desktop"
+        mkdir -p "$(dirname "$desktop_file")"
+        cat > "$desktop_file" << EOF
+[Desktop Entry]
+Name=Obsidian
+Exec=$obsidian_path --no-sandbox %u
+Terminal=false
+Type=Application
+Icon=obsidian
+StartupWMClass=obsidian
+Comment=Obsidian - A knowledge base that works on local Markdown files
+Categories=Office;
+MimeType=x-scheme-handler/obsidian;
+EOF
+        print_success "Desktop entry created"
+        print_info "Launch from applications menu or run: obsidian --no-sandbox"
+    else
+        print_error "Failed to download Obsidian"
+        return 1
+    fi
+}
+
+# =============================================================================
 # Claude Code
 # =============================================================================
 
@@ -952,6 +1089,24 @@ print_summary() {
         echo -e "    ${CHECK_MARK} Docker ($(docker --version | cut -d' ' -f3 | tr -d ','))"
     else
         echo -e "    ${CROSS_MARK} Docker"
+    fi
+
+    # Wine
+    if command_exists wine; then
+        echo -e "    ${CHECK_MARK} Wine ($(wine --version 2>/dev/null | cut -d'-' -f2))"
+    else
+        echo -e "    ${CROSS_MARK} Wine"
+    fi
+
+    echo ""
+    echo -e "  ${BOLD}Applications:${NC}"
+    echo ""
+
+    # Obsidian
+    if [ -f "$HOME/.local/bin/obsidian" ]; then
+        echo -e "    ${CHECK_MARK} Obsidian"
+    else
+        echo -e "    ${CROSS_MARK} Obsidian"
     fi
 
     echo ""
@@ -1106,6 +1261,8 @@ main() {
     setup_claude_config
     install_claude_code
     install_docker
+    install_wine
+    install_obsidian
     install_cursor
     install_snap_packages
     print_dotfiles_reminder
