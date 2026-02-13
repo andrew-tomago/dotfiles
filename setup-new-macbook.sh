@@ -95,12 +95,20 @@ HOMEBREW_CASKS=(
     "google-chrome"    # Web browser
     "appcleaner"       # App uninstaller
     "docker"           # Docker Desktop
+    "discord"          # Community chat and voice
+    "cursor"           # AI-powered code editor
+    "linear-linear"    # Issue tracking and project management
+    "granola"          # Meeting notes and transcription
+    "obsidian"         # Knowledge base and note-taking
+    # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
 )
 
 # npm global packages
 NPM_PACKAGES=(
     "@openai/codex"        # OpenAI Codex CLI
     "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-01-28 | Uninstall: npm uninstall -g @openai/codex-sdk
+    "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: npm uninstall -g typescript
+    "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g vercel
 )
 
 # Go packages (installed via go install)
@@ -228,6 +236,8 @@ get_app_name_for_cask() {
         notion)          echo "Notion" ;;
         obsidian)        echo "Obsidian" ;;
         cursor)          echo "Cursor" ;;
+        linear-linear)   echo "Linear" ;;
+        granola)         echo "Granola" ;;
         # Default: capitalize first letter of each hyphenated word
         *)
             echo "$1" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'

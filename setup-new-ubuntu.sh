@@ -96,12 +96,16 @@ MANUAL_CLI_TOOLS=(
 # Snap packages (optional GUI apps or tools not in apt)
 SNAP_PACKAGES=(
     "discord"          # Community chat
+    "obsidian --classic"  # Knowledge base and note-taking | Added: 2026-02-13 | Uninstall: sudo snap remove obsidian
 )
 
 # npm global packages
 NPM_PACKAGES=(
-    # "@openai/codex"
-    # TODO: Add your preferred npm packages
+    "@openai/codex"        # OpenAI Codex CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g @openai/codex
+    "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-02-13 | Uninstall: npm uninstall -g @openai/codex-sdk
+    "@ast-grep/cli"        # Structural code search tool | Added: 2026-02-13 | Uninstall: npm uninstall -g @ast-grep/cli
+    "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: npm uninstall -g typescript
+    "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g vercel
 )
 
 # NVM version to install
@@ -680,6 +684,62 @@ install_docker() {
 }
 
 # =============================================================================
+# Cursor IDE (AppImage Installation)
+# =============================================================================
+
+install_cursor() {
+    print_section "Cursor IDE"
+
+    if command_exists cursor || [ -f "$HOME/.local/bin/cursor" ]; then
+        print_success "Cursor already installed"
+        return 0
+    fi
+
+    print_step "Installing Cursor IDE via AppImage..."
+
+    # Install libfuse2 dependency
+    if ! apt_package_installed "libfuse2"; then
+        print_step "Installing libfuse2 dependency..."
+        sudo apt install -y libfuse2
+    fi
+
+    # Create directories
+    mkdir -p "$HOME/.local/bin"
+    mkdir -p "$HOME/.local/share/applications"
+
+    # Download Cursor AppImage
+    local cursor_url="https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable"
+    print_step "Downloading Cursor AppImage..."
+
+    if curl -fsSL "$cursor_url" -o "$HOME/.local/bin/cursor.AppImage"; then
+        chmod +x "$HOME/.local/bin/cursor.AppImage"
+
+        # Create symbolic link
+        ln -sf "$HOME/.local/bin/cursor.AppImage" "$HOME/.local/bin/cursor"
+
+        # Create desktop entry
+        cat > "$HOME/.local/share/applications/cursor.desktop" << 'DESKTOP_EOF'
+[Desktop Entry]
+Name=Cursor
+Exec=$HOME/.local/bin/cursor.AppImage %U
+Terminal=false
+Type=Application
+Icon=cursor
+StartupWMClass=Cursor
+Comment=AI-powered code editor
+MimeType=x-scheme-handler/cursor;
+Categories=Utility;Development;IDE;
+DESKTOP_EOF
+
+        print_success "Cursor installed to ~/.local/bin/cursor"
+        print_info "Launch with: cursor"
+    else
+        print_error "Failed to download Cursor AppImage"
+        return 1
+    fi
+}
+
+# =============================================================================
 # GitHub CLI
 # =============================================================================
 
@@ -969,6 +1029,17 @@ print_summary() {
     fi
 
     echo ""
+    echo -e "  ${BOLD}GUI Applications:${NC}"
+    echo ""
+
+    # Cursor
+    if command_exists cursor || [ -f "$HOME/.local/bin/cursor" ]; then
+        echo -e "    ${CHECK_MARK} Cursor IDE"
+    else
+        echo -e "    ${CROSS_MARK} Cursor IDE"
+    fi
+
+    echo ""
     echo -e "  ${BOLD}Snap Applications:${NC}"
     echo ""
 
@@ -977,6 +1048,13 @@ print_summary() {
         echo -e "    ${CHECK_MARK} Discord"
     else
         echo -e "    ${CROSS_MARK} Discord"
+    fi
+
+    # Obsidian
+    if snap_package_installed "obsidian"; then
+        echo -e "    ${CHECK_MARK} Obsidian"
+    else
+        echo -e "    ${CROSS_MARK} Obsidian"
     fi
 
     echo ""
@@ -1028,6 +1106,7 @@ main() {
     setup_claude_config
     install_claude_code
     install_docker
+    install_cursor
     install_snap_packages
     print_dotfiles_reminder
     print_summary
