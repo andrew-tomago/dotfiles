@@ -26,13 +26,14 @@
 #   3. Core CLI Packages (git, curl, wget, zsh, etc.)
 #   4. Modern CLI Tools via apt (ripgrep, fd, bat, fzf)
 #   5. Additional CLI Tools via manual install (zoxide, lsd, tealdeer)
-#   6. Snap Packages (Discord)
-#   7. Zsh Configuration (set as default shell)
-#   8. Oh My Zsh (zsh framework)
+#   6. Zsh Configuration (set as default shell)
+#   7. Oh My Zsh (zsh framework)
+#   8. GitHub CLI (needed for Claude config clone)
 #   9. NVM + Node.js LTS
-#  10. Docker (via official repository)
-#  11. GitHub CLI
-#  12. Claude Code (AI coding assistant)
+#  10. Claude Config Repository (~/.claude from git)
+#  11. Claude Code (AI coding assistant)
+#  12. Docker (via official repository — independent, heavy)
+#  13. Snap Packages (Discord — independent, optional)
 #
 # Usage:
 #   chmod +x setup-new-ubuntu.sh
@@ -717,6 +718,53 @@ install_github_cli() {
 }
 
 # =============================================================================
+# Claude Config Repository
+# =============================================================================
+
+setup_claude_config() {
+    print_section "Claude Config Repository"
+
+    local claude_config_dir="$HOME/.claude"
+    local claude_config_repo="https://github.com/andrew-tomago/.claude.git"
+
+    # Already cloned — pull latest
+    if [ -d "$claude_config_dir/.git" ]; then
+        print_success "Claude config repo already cloned"
+        print_step "Pulling latest changes..."
+        if (cd "$claude_config_dir" && git pull --quiet); then
+            print_success "Claude config updated"
+        else
+            print_warning "Could not pull updates (check connectivity/auth)"
+        fi
+        return 0
+    fi
+
+    # Directory exists without git — don't clobber
+    if [ -d "$claude_config_dir" ]; then
+        print_warning "$claude_config_dir exists without git history — skipping clone"
+        print_info "To set up manually:"
+        print_info "  mv $claude_config_dir ${claude_config_dir}.bak"
+        print_info "  git clone $claude_config_repo $claude_config_dir"
+        print_info "  cp -rn ${claude_config_dir}.bak/* $claude_config_dir/"
+        return 0
+    fi
+
+    # Fresh clone
+    print_step "Cloning Claude config repository..."
+    if git clone "$claude_config_repo" "$claude_config_dir"; then
+        print_success "Claude config repo cloned to $claude_config_dir"
+    else
+        print_error "Failed to clone Claude config repo"
+        if command_exists gh && ! gh auth status &> /dev/null 2>&1; then
+            print_info "GitHub CLI not authenticated — run 'gh auth login' then re-run"
+        else
+            print_info "Ensure you have access to $claude_config_repo"
+        fi
+        return 1
+    fi
+}
+
+# =============================================================================
 # Claude Code
 # =============================================================================
 
@@ -830,6 +878,13 @@ print_summary() {
         echo -e "    ${CROSS_MARK} GitHub CLI"
     fi
 
+    # Claude Config
+    if [ -d "$HOME/.claude/.git" ]; then
+        echo -e "    ${CHECK_MARK} Claude Config (~/.claude repo)"
+    else
+        echo -e "    ${CROSS_MARK} Claude Config (~/.claude repo)"
+    fi
+
     # Claude Code
     if command_exists claude || [ -f "$HOME/.claude/local/bin/claude" ]; then
         echo -e "    ${CHECK_MARK} Claude Code"
@@ -937,15 +992,16 @@ main() {
     install_apt_packages
     install_modern_cli_tools
     install_manual_cli_tools
-    install_snap_packages
     configure_zsh
     install_oh_my_zsh
     configure_zshrc_modules
+    install_github_cli
     install_nvm
     install_npm_packages
-    install_docker
-    install_github_cli
+    setup_claude_config
     install_claude_code
+    install_docker
+    install_snap_packages
     print_dotfiles_reminder
     print_summary
 }

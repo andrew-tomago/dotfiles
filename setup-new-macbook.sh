@@ -34,9 +34,10 @@
 #   9. Oh My Zsh (zsh framework)
 #  10. NVM (Node version manager - optional, for multiple Node versions)
 #  11. npm Global Packages (Codex)
-#  12. Claude Code (AI coding assistant)
-#  13. GitHub CLI Configuration
-#  14. Default Browser Configuration (Chrome)
+#  12. Claude Config Repository (~/.claude from git)
+#  13. Claude Code (AI coding assistant)
+#  14. GitHub CLI Configuration
+#  15. Default Browser Configuration (Chrome)
 #
 # Usage:
 #   chmod +x setup-new-macbook.sh
@@ -903,6 +904,53 @@ install_npm_packages() {
 }
 
 # =============================================================================
+# Claude Config Repository
+# =============================================================================
+
+setup_claude_config() {
+    print_section "Claude Config Repository"
+
+    local claude_config_dir="$HOME/.claude"
+    local claude_config_repo="https://github.com/andrew-tomago/.claude.git"
+
+    # Already cloned — pull latest
+    if [ -d "$claude_config_dir/.git" ]; then
+        print_success "Claude config repo already cloned"
+        print_step "Pulling latest changes..."
+        if (cd "$claude_config_dir" && git pull --quiet); then
+            print_success "Claude config updated"
+        else
+            print_warning "Could not pull updates (check connectivity/auth)"
+        fi
+        return 0
+    fi
+
+    # Directory exists without git — don't clobber
+    if [ -d "$claude_config_dir" ]; then
+        print_warning "$claude_config_dir exists without git history — skipping clone"
+        print_info "To set up manually:"
+        print_info "  mv $claude_config_dir ${claude_config_dir}.bak"
+        print_info "  git clone $claude_config_repo $claude_config_dir"
+        print_info "  cp -rn ${claude_config_dir}.bak/* $claude_config_dir/"
+        return 0
+    fi
+
+    # Fresh clone
+    print_step "Cloning Claude config repository..."
+    if git clone "$claude_config_repo" "$claude_config_dir"; then
+        print_success "Claude config repo cloned to $claude_config_dir"
+    else
+        print_error "Failed to clone Claude config repo"
+        if command_exists gh && ! gh auth status &> /dev/null 2>&1; then
+            print_info "GitHub CLI not authenticated — run 'gh auth login' then re-run"
+        else
+            print_info "Ensure you have access to $claude_config_repo"
+        fi
+        return 1
+    fi
+}
+
+# =============================================================================
 # Claude Code
 # =============================================================================
 
@@ -1131,6 +1179,13 @@ print_summary() {
         echo -e "    ${CROSS_MARK} GitHub CLI"
     fi
 
+    # Claude Config
+    if [ -d "$HOME/.claude/.git" ]; then
+        echo -e "    ${CHECK_MARK} Claude Config (~/.claude repo)"
+    else
+        echo -e "    ${CROSS_MARK} Claude Config (~/.claude repo)"
+    fi
+
     # Claude Code
     if command_exists claude || [ -f "$HOME/.claude/local/bin/claude" ]; then
         echo -e "    ${CHECK_MARK} Claude Code"
@@ -1295,6 +1350,7 @@ main() {
     configure_zshrc_modules
     install_nvm
     install_npm_packages
+    setup_claude_config
     install_claude_code
     configure_github_cli
     configure_default_browser
