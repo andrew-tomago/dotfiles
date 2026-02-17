@@ -100,6 +100,7 @@ HOMEBREW_CASKS=(
     "linear-linear"    # Issue tracking and project management
     "granola"          # Meeting notes and transcription
     "obsidian"         # Knowledge base and note-taking
+    "blackhole-2ch"    # Virtual audio driver (2-channel) | Added: 2026-02-16 | Uninstall: brew uninstall --cask blackhole-2ch
     # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
 )
 
