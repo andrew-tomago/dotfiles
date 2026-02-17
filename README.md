@@ -3,7 +3,19 @@
 THIS README ONLY APPLIES TO OUR DOTFILES REPO AT ~/.dotfiles.git
 It's a bare git repository method managing all our local configs.
 
-## Fresh Installation
+## Onboarding a New Machine
+
+### 1. Run the platform setup script
+
+| Platform | Command | Notes |
+|----------|---------|-------|
+| MacBook (Intel or Apple Silicon) | `./setup-new-macbook.sh` | Auto-detects architecture via `uname -m` |
+| MacBook + music production | `./setup-new-macbook.sh --music` | Adds DAWs, audio plugins |
+| Ubuntu | `./setup-new-ubuntu.sh` | apt + snap based |
+
+Intel Macs automatically skip Rosetta 2 and use the `/usr/local` Homebrew prefix. No flags needed.
+
+### 2. Install dotfiles
 
 ```bash
 curl -Lks https://raw.githubusercontent.com/andrew-tomago/dotfiles/main/.dotfiles-install.sh | bash
@@ -17,6 +29,18 @@ alias config="/usr/bin/git --git-dir=$HOME/.dotfiles.git --work-tree=$HOME"
 # The repository is configured to hide untracked files. Without this, `config status` would show every file in your home directory:
 config config --local status.showUntrackedFiles no
 config checkout
+```
+
+### 3. Install Claude config
+
+```bash
+git clone https://github.com/andrew-tomago/.claude.git ~/.claude
+```
+
+### 4. Verify
+
+```bash
+cs   # config status — should show clean working tree
 ```
 
 ## Daily Usage
@@ -67,14 +91,14 @@ clist    # config ls-tree -r main --name-only
 - `.gitignore` - Dotfiles whitelist rules
 - `.gitignore_global` - Global ignores
 - `.dotfiles-install.sh` - Bootstrap script
-- `setup-new-macbook.sh` - macOS dev environment setup
+- `setup-new-macbook.sh` - macOS dev environment setup (Intel + Apple Silicon)
 - `setup-new-ubuntu.sh` - Ubuntu dev environment setup
 - `README.md` - Documentation
 - `CLAUDE.md` - Symlink to `~/.claude/CLAUDE.md` (relative path for portability)
 
 ### MacBook Setup
 
-`setup-new-macbook.sh` and its companion [MacBook Setup Checklist Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) are the sources of truth for this machine's dev environment. The script is self-documenting—refer to it directly for package lists and installation order.
+`setup-new-macbook.sh` supports both **Intel and Apple Silicon** Macs. Architecture is auto-detected — the same script works on either. Its companion [MacBook Setup Checklist Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) is the source of truth for this machine's dev environment. The script is self-documenting — refer to it directly for package lists and installation order.
 
 **Managing software:** Use the `install-software` and `uninstall-software` skills from the `unique@skill-tree` plugin as the primary way to add or remove tools from the setup script. They handle script edits and gist synchronization.
 
@@ -175,11 +199,11 @@ config commit -m "msg"  # Commit if safe
 
 ### Why This Method?
 
-- ✅ No `.git` folder cluttering home directory
-- ✅ Files remain in natural locations (no symlinks)
-- ✅ Native git workflow (all git commands work)
-- ✅ Explicit file tracking (safe by default)
-- ✅ Coexists with other git repos perfectly
+- No `.git` folder cluttering home directory
+- Files remain in natural locations (no symlinks)
+- Native git workflow (all git commands work)
+- Explicit file tracking (safe by default)
+- Coexists with other git repos perfectly
 
 ### How It Works
 
@@ -250,25 +274,30 @@ All critical configuration guidelines and workflow instructions are documented i
 
 ## Environment
 
-Supported platforms with dedicated setup scripts:
+### Platform Comparison
 
-### macOS
-- **Setup**: `setup-new-macbook.sh`
-- **Package Manager**: Homebrew
-- **Go**: Homebrew (go-grip for local Markdown rendering)
-- **Python**: uv (fast package/project manager)
-- **Databases**: DuckDB (OLAP), SQLite (keg-only)
+| Feature | MacBook (Apple Silicon) | MacBook (Intel) | Ubuntu |
+|---------|------------------------|-----------------|--------|
+| Setup script | `setup-new-macbook.sh` | `setup-new-macbook.sh` | `setup-new-ubuntu.sh` |
+| Companion checklist | [MacBook Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) | [MacBook Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) | [Ubuntu Gist](https://gist.github.com/andrew-tomago/b13a3bdace6261c747f9124fcbdcee70) |
+| Package manager | Homebrew (`/opt/homebrew`) | Homebrew (`/usr/local`) | apt + snap |
+| Shell | Zsh + Oh My Zsh | Zsh + Oh My Zsh | Zsh + Oh My Zsh |
+| Node | NVM | NVM | NVM |
+| Go | Homebrew (go-grip for Markdown) | Homebrew (go-grip for Markdown) | — |
+| Python | uv | uv | — |
+| Databases | DuckDB, SQLite | DuckDB, SQLite | — |
+| Docker | Docker Desktop (cask) | Docker Desktop (cask) | Docker Engine (apt) |
+| Music software | `--music` flag | `--music` flag | — |
+| Git auth | GitHub CLI (`gh`) | GitHub CLI (`gh`) | GitHub CLI (`gh`) |
+| AI | Claude Code | Claude Code | Claude Code |
 
-### Ubuntu
-- **Setup**: `setup-new-ubuntu.sh`
-- **Package Manager**: apt + snap
-- **CLI Tools**: ripgrep, fd-find, bat, fzf, zoxide, lsd
+### Common (All Platforms)
 
-### Common (Both Platforms)
 - **Shell**: Zsh with Oh My Zsh (robbyrussell theme)
 - **Node**: Managed with NVM
 - **Git**: GitHub CLI (`gh`) for authentication
 - **AI**: Claude Code
+- **CLI Tools**: ripgrep, fd, bat, fzf, zoxide, lsd
 
 ## Repository
 
