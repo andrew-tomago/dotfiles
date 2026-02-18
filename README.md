@@ -126,6 +126,7 @@ clist    # config ls-tree -r main --name-only
 | `.nvm/` | Node Version Manager (reinstall on new machines) | Excluded |
 | `.npm/` | npm cache | Excluded |
 | `.cache/` | Application cache files | Excluded |
+| `.codex/` | OpenAI Codex CLI configuration | Excluded |
 | `.local/` | Local application data | Excluded |
 | `.Trash/` | System trash | Excluded |
 | `.DS_Store` | macOS Finder metadata | Excluded |

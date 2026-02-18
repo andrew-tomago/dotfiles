@@ -112,6 +112,7 @@ HOMEBREW_CASKS=(
     "linear-linear"    # Issue tracking and project management
     "granola"          # Meeting notes and transcription
     "obsidian"         # Knowledge base and note-taking
+    "codex"            # OpenAI Codex CLI (native binary) | Added: 2026-02-18 | Uninstall: brew uninstall --cask codex
     # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
 )
 
@@ -122,7 +123,7 @@ MUSIC_CASKS=(
 
 # npm global packages
 NPM_PACKAGES=(
-    "@openai/codex"        # OpenAI Codex CLI
+    # Note: @openai/codex CLI moved to HOMEBREW_CASKS as native binary (faster, no Node dependency)
     "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-01-28 | Uninstall: npm uninstall -g @openai/codex-sdk
     "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: npm uninstall -g typescript
     "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g vercel
@@ -927,13 +928,7 @@ generate_zshrc() {
             content+=$'cplan() { claude --dangerously-skip-permissions --permission-mode plan "$@"; }\n'
         fi
         if $has_codex; then
-            content+=$'xyolo() {\n'
-            content+=$'    if [[ "$*" == *"--approval-mode"* ]]; then\n'
-            content+=$'        codex "$@"\n'
-            content+=$'    else\n'
-            content+=$'        codex --approval-mode full-auto "$@"\n'
-            content+=$'    fi\n'
-            content+=$'}\n'
+            content+=$'xyolo() { codex --full-auto "$@"; }\n'
         fi
         content+=$'\n'
     fi
