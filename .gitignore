@@ -4,9 +4,6 @@
 *
 
 # === Explicitly Track Configuration Files ===
-!.zshrc
-!.zshrc.d/
-!.zshrc.d/*.zsh
 !.gitconfig
 !.gitignore_global
 !.gitignore

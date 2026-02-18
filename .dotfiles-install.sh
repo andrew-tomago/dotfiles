@@ -46,21 +46,14 @@ done
 echo "Checking out dotfiles..."
 config checkout
 
-# Add alias to .zshrc if not already present
-if ! grep -q "alias config=" "$HOME/.zshrc" 2>/dev/null; then
-    echo "" >> "$HOME/.zshrc"
-    echo "# Dotfiles management alias" >> "$HOME/.zshrc"
-    echo 'alias config="/usr/bin/git --git-dir=$HOME/.dotfiles.git --work-tree=$HOME"' >> "$HOME/.zshrc"
-fi
-
 echo ""
 echo "=== Installation Complete ==="
 echo ""
 echo "Next steps:"
-echo "1. Reload shell: source ~/.zshrc"
-echo "2. Verify: config status"
-echo "3. Install Oh My Zsh if needed: sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
-echo "4. Install NVM if needed: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
-echo "5. Clone .claude separately: git clone https://github.com/andrew-tomago/.claude.git ~/.claude"
+echo "1. Run the setup script to generate .zshrc and install tools:"
+echo "   ./setup-new-macbook.sh   (macOS)"
+echo "   ./setup-new-ubuntu.sh    (Ubuntu)"
+echo "2. Reload shell: source ~/.zshrc"
+echo "3. Verify: config status"
 echo ""
 echo "Existing files backed up to: $BACKUP_DIR"
