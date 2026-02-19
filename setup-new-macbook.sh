@@ -41,8 +41,9 @@
 #
 # Usage:
 #   chmod +x setup-new-macbook.sh
-#   ./setup-new-macbook.sh              # Standard setup
-#   ./setup-new-macbook.sh --music      # Include music production software
+#   ./setup-new-macbook.sh
+#
+# For music production software, run setup-music-apps.sh separately after this.
 #
 # =============================================================================
 
@@ -114,11 +115,6 @@ HOMEBREW_CASKS=(
     "obsidian"         # Knowledge base and note-taking
     "codex"            # OpenAI Codex CLI (native binary) | Added: 2026-02-18 | Uninstall: brew uninstall --cask codex
     # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
-)
-
-# Music production software (optional: --music flag)
-MUSIC_CASKS=(
-    "blackhole-2ch"    # Virtual audio driver (2-channel) | Added: 2026-02-16 | Uninstall: brew uninstall --cask blackhole-2ch
 )
 
 # npm global packages
@@ -689,41 +685,6 @@ install_homebrew_casks() {
 
     echo ""
     print_info "Summary: $installed installed, $skipped already present, $failed failed"
-}
-
-# =============================================================================
-# Music Production Software (optional)
-# =============================================================================
-
-install_music_casks() {
-    print_section "Music Production Software"
-
-    require_brew || return 1
-
-    print_info "Installing music production software..."
-
-    local installed=0
-    local skipped=0
-    local failed=0
-
-    for cask in "${MUSIC_CASKS[@]}"; do
-        if brew_cask_installed "$cask"; then
-            print_info "$cask already installed"
-            ((skipped++))
-        else
-            print_step "Installing $cask..."
-            if brew_install_cask "$cask"; then
-                print_success "$cask installed"
-                ((installed++))
-            else
-                print_error "Failed to install $cask"
-                ((failed++))
-            fi
-        fi
-    done
-
-    echo ""
-    print_info "Music summary: $installed installed, $skipped already present, $failed failed"
 }
 
 # =============================================================================
@@ -1462,13 +1423,6 @@ print_summary() {
 # =============================================================================
 
 main() {
-    local install_music=false
-    for arg in "$@"; do
-        case "$arg" in
-            --music) install_music=true ;;
-        esac
-    done
-
     print_header "macOS Development Environment Setup"
 
     echo -e "  ${INFO} Architecture: $(uname -m)"
@@ -1487,9 +1441,6 @@ main() {
     install_go_packages
     configure_modern_cli_tools
     install_homebrew_casks
-    if $install_music; then
-        install_music_casks
-    fi
     configure_zsh
     install_oh_my_zsh
     install_nvm
