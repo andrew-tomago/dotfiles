@@ -1,17 +1,17 @@
 # (Config) Dotfiles Repo
 
-THIS README ONLY APPLIES TO OUR DOTFILES REPO AT ~/.dotfiles.git
+THIS README ONLY APPLIES TO OUR DOTFILES REPO AT \~/.dotfiles.git
 It's a bare git repository method managing all our local configs.
 
 ## Onboarding a New Machine
 
 ### 1. Run the platform setup script
 
-| Platform | Command | Notes |
-|----------|---------|-------|
-| MacBook (Intel or Apple Silicon) | `./setup-new-macbook.sh` | Auto-detects architecture via `uname -m` |
-| MacBook + music production | `./setup-new-macbook.sh --music` | Adds DAWs, audio plugins |
-| Ubuntu | `./setup-new-ubuntu.sh` | apt + snap based |
+| Platform                         | Command                          | Notes                                    |
+| -------------------------------- | -------------------------------- | ---------------------------------------- |
+| MacBook (Intel or Apple Silicon) | `./setup-new-macbook.sh`         | Auto-detects architecture via `uname -m` |
+| MacBook + music production       | `./setup-new-macbook.sh --music` | Adds DAWs, audio plugins                 |
+| Ubuntu                           | `./setup-new-ubuntu.sh`          | apt + snap based                         |
 
 Intel Macs automatically skip Rosetta 2 and use the `/usr/local` Homebrew prefix. No flags needed.
 
@@ -59,17 +59,20 @@ Pre-commit hook prevents accidental commits of sensitive files.
 
 Name the skill ID directly in the first line of your prompt. This avoids ambiguous routing.
 
-| Goal | Use this exact skill name | Prompt template |
-| --- | --- | --- |
-| End-to-end WIN flow | `win-committee` | `Use win-committee. Run committee flow with targets at <path> and content at <path>.` |
-| Build target profiles only | `win-profile` | `Use win-profile. Generate profiles from <targets-path>.` |
-| Score drafts only | `win-evaluate` | `Use win-evaluate. Evaluate <content-path> using <profiles-path> and <committee-path>.` |
-| Generate markdown summary only | `win-summary` | `Use win-summary. Synthesize summary from <committee-matrix-path>.` |
+| Goal                           | Use this exact skill name | Prompt template                                                                         |
+| ------------------------------ | ------------------------- | --------------------------------------------------------------------------------------- |
+| End-to-end WIN flow            | `win-committee`           | `Use win-committee. Run committee flow with targets at <path> and content at <path>.`   |
+| Build target profiles only     | `win-profile`             | `Use win-profile. Generate profiles from <targets-path>.`                               |
+| Score drafts only              | `win-evaluate`            | `Use win-evaluate. Evaluate <content-path> using <profiles-path> and <committee-path>.` |
+| Generate markdown summary only | `win-summary`             | `Use win-summary. Synthesize summary from <committee-matrix-path>.`                     |
 
 Rules:
-- Put `Use <skill-id>.` first.
-- Repeat the skill ID each turn; skill use is turn-scoped.
-- Prefer exact IDs (`win-committee`, `win-profile`, `win-evaluate`, `win-summary`) over descriptive aliases.
+
+* Put `Use <skill-id>.` first.
+
+* Repeat the skill ID each turn; skill use is turn-scoped.
+
+* Prefer exact IDs (`win-committee`, `win-profile`, `win-evaluate`, `win-summary`) over descriptive aliases.
 
 ### Convenience Aliases
 
@@ -85,16 +88,25 @@ clist    # config ls-tree -r main --name-only
 
 ## Currently Tracked Files
 
-- `.zshrc` - Modular shell loader (sources `.zshrc.d/*.zsh`)
-- `.zshrc.d/*.zsh` - Modular shell configuration modules
-- `.gitconfig` - Git settings, gh auth
-- `.gitignore` - Dotfiles whitelist rules
-- `.gitignore_global` - Global ignores
-- `.dotfiles-install.sh` - Bootstrap script
-- `setup-new-macbook.sh` - macOS dev environment setup (Intel + Apple Silicon)
-- `setup-new-ubuntu.sh` - Ubuntu dev environment setup
-- `README.md` - Documentation
-- `CLAUDE.md` - Symlink to `~/.claude/CLAUDE.md` (relative path for portability)
+* `.zshrc` - Modular shell loader (sources `.zshrc.d/*.zsh`)
+
+* `.zshrc.d/*.zsh` - Modular shell configuration modules
+
+* `.gitconfig` - Git settings, gh auth ⚠️ assume-unchanged set (see Troubleshooting)
+
+* `.gitignore` - Dotfiles whitelist rules
+
+* `.gitignore_global` - Global ignores
+
+* `.dotfiles-install.sh` - Bootstrap script
+
+* `setup-new-macbook.sh` - macOS dev environment setup (Intel + Apple Silicon)
+
+* `setup-new-ubuntu.sh` - Ubuntu dev environment setup
+
+* `README.md` - Documentation
+
+* `CLAUDE.md` - Symlink to `~/.claude/CLAUDE.md` (relative path for portability)
 
 ### MacBook Setup
 
@@ -110,52 +122,57 @@ clist    # config ls-tree -r main --name-only
 
 ## Directory Management Guide
 
-| Directory/File Pattern | Description | Status |
-|------------------------|-------------|--------|
-| `.ssh/` | SSH keys and authorized_keys | Never tracked - protected |
-| `.aws/` | AWS credentials and configuration | Never tracked - protected |
-| `.docker/` | Docker credentials and context | Never tracked - protected |
-| `.gnupg/` | GPG keys | Never tracked - protected |
-| `.claude.json` | Claude API credentials | Never tracked - protected |
-| `*.pem` | PEM certificate files | Never tracked - protected |
-| `*.key` | Private key files | Never tracked - protected |
-| `*_rsa` | RSA key files | Never tracked - protected |
-| `*.p12` | PKCS#12 certificate files | Never tracked - protected |
-| `*.credentials` | Credential files | Never tracked - protected |
-| `.oh-my-zsh/` | Oh My Zsh framework (reinstall on new machines) | Excluded |
-| `.nvm/` | Node Version Manager (reinstall on new machines) | Excluded |
-| `.npm/` | npm cache | Excluded |
-| `.cache/` | Application cache files | Excluded |
-| `.codex/` | OpenAI Codex CLI configuration | Excluded |
-| `.local/` | Local application data | Excluded |
-| `.Trash/` | System trash | Excluded |
-| `.DS_Store` | macOS Finder metadata | Excluded |
-| `.zsh_sessions/` | Zsh session data | Excluded |
-| `.zsh_history` | Command history (may contain sensitive data) | Excluded |
-| `.viminfo` | Vim session info | Excluded |
-| `.CFUserTextEncoding` | System encoding file | Excluded |
-| `go/` | Go workspace (GOPATH: packages, binaries) | Excluded |
+| Directory/File Pattern | Description                                                                  | Status                    |
+| ---------------------- | ---------------------------------------------------------------------------- | ------------------------- |
+| `.ssh/`                | SSH keys and authorized\_keys                                                | Never tracked - protected |
+| `.aws/`                | AWS credentials and configuration                                            | Never tracked - protected |
+| `.docker/`             | Docker credentials and context                                               | Never tracked - protected |
+| `.gnupg/`              | GPG keys                                                                     | Never tracked - protected |
+| `.claude.json`         | Claude API credentials                                                       | Never tracked - protected |
+| `*.pem`                | <span data-proof="authored" data-by="ai:claude">PEM certificate files</span> | Never tracked - protected |
+| `*.key`                | Private key files                                                            | Never tracked - protected |
+| `*_rsa`                | RSA key files                                                                | Never tracked - protected |
+| `*.p12`                | PKCS#12 certificate files                                                    | Never tracked - protected |
+| `*.credentials`        | Credential files                                                             | Never tracked - protected |
+| `.oh-my-zsh/`          | Oh My Zsh framework (reinstall on new machines)                              | Excluded                  |
+| `.nvm/`                | Node Version Manager (reinstall on new machines)                             | Excluded                  |
+| `.npm/`                | npm cache                                                                    | Excluded                  |
+| `.cache/`              | Application cache files                                                      | Excluded                  |
+| `.codex/`              | OpenAI Codex CLI configuration                                               | Excluded                  |
+| `.local/`              | Local application data                                                       | Excluded                  |
+| `.Trash/`              | System trash                                                                 | Excluded                  |
+| `.DS_Store`            | macOS Finder metadata                                                        | Excluded                  |
+| `.zsh_sessions/`       | Zsh session data                                                             | Excluded                  |
+| `.zsh_history`         | Command history (may contain sensitive data)                                 | Excluded                  |
+| `.viminfo`             | Vim session info                                                             | Excluded                  |
+| `.CFUserTextEncoding`  | System encoding file                                                         | Excluded                  |
+| `go/`                  | Go workspace (GOPATH: packages, binaries)                                    | Excluded                  |
 
 #### Separate Git Repositories
 
-- **`.claude/`** - Claude Code workflows separately versioned
-  - [Repository](https://github.com/andrew-tomago/.claude) Install: `git clone https://github.com/andrew-tomago/.claude.git ~/.claude`
-  - **`CLAUDE.md` symlink** - This dotfiles repo tracks a symlink at `~/CLAUDE.md` pointing to `.claude/CLAUDE.md` (relative path). This lets Claude Code find project instructions at the home level while the actual file lives in the `.claude` repo. The relative path ensures portability across machines with different usernames.
+* **`.claude/`** - Claude Code workflows separately versioned
+
+  * [Repository](https://github.com/andrew-tomago/.claude) Install: `git clone https://github.com/andrew-tomago/.claude.git ~/.claude`
+
+  * **`CLAUDE.md`** **symlink** - This dotfiles repo tracks a symlink at `~/CLAUDE.md` pointing to `.claude/CLAUDE.md` (relative path). This lets Claude Code find project instructions at the home level while the actual file lives in the `.claude` repo. The relative path ensures portability across machines with different usernames.
 
 ### How to Add New Configurations
 
 1. **Inspect the file first:**
+
    ```bash
    cat ~/.newconfig  # Make sure no secrets!
    ```
 
-2. **Update `.gitignore` to whitelist:**
+2. **Update** **`.gitignore`** **to whitelist:**
+
    ```bash
    vim ~/.gitignore
    # Add: !.newconfig
    ```
 
 3. **Stage, verify, and commit:**
+
    ```bash
    config add .newconfig
    config diff --cached     # Review changes
@@ -200,11 +217,15 @@ config commit -m "msg"  # Commit if safe
 
 ### Why This Method?
 
-- No `.git` folder cluttering home directory
-- Files remain in natural locations (no symlinks)
-- Native git workflow (all git commands work)
-- Explicit file tracking (safe by default)
-- Coexists with other git repos perfectly
+* No `.git` folder cluttering home directory
+
+* Files remain in natural locations (no symlinks)
+
+* Native git workflow (all git commands work)
+
+* Explicit file tracking (safe by default)
+
+* Coexists with other git repos perfectly
 
 ### How It Works
 
@@ -223,6 +244,18 @@ config push             # Pushes to remote
 ```
 
 ## Troubleshooting
+
+### Editing `.gitconfig`
+
+`.gitconfig` has `assume-unchanged` set so `gh auth setup-git` changes don't surface as dirty. To make edits visible to git first:
+
+```bash
+config update-index --no-assume-unchanged .gitconfig
+# make your changes, then commit
+config add .gitconfig && config commit -m "chore: update gitconfig"
+# re-hide from git
+config update-index --assume-unchanged .gitconfig
+```
 
 ### "fatal: not a git repository"
 
@@ -268,57 +301,70 @@ chmod +x ~/.dotfiles.git/hooks/pre-commit
 ## Configuration & Instructions
 
 All critical configuration guidelines and workflow instructions are documented in this file and enforced by the pre-commit hook. This includes:
-- Repository setup and daily usage commands
-- Security rules for sensitive files
-- Workflow for adding new configurations
-- Directory management guidelines
+
+* Repository setup and daily usage commands
+
+* Security rules for sensitive files
+
+* Workflow for adding new configurations
+
+* Directory management guidelines
 
 ## Environment
 
 ### Platform Comparison
 
-| Feature | MacBook (Apple Silicon) | MacBook (Intel) | Ubuntu |
-|---------|------------------------|-----------------|--------|
-| Setup script | `setup-new-macbook.sh` | `setup-new-macbook.sh` | `setup-new-ubuntu.sh` |
+| Feature             | MacBook (Apple Silicon)                                                                | MacBook (Intel)                                                                        | Ubuntu                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Setup script        | `setup-new-macbook.sh`                                                                 | `setup-new-macbook.sh`                                                                 | `setup-new-ubuntu.sh`                                                                 |
 | Companion checklist | [MacBook Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) | [MacBook Gist](https://gist.github.com/andrew-tomago/35d217aa12f387c529ed188facc3d212) | [Ubuntu Gist](https://gist.github.com/andrew-tomago/b13a3bdace6261c747f9124fcbdcee70) |
-| Package manager | Homebrew (`/opt/homebrew`) | Homebrew (`/usr/local`) | apt + snap |
-| Shell | Zsh + Oh My Zsh | Zsh + Oh My Zsh | Zsh + Oh My Zsh |
-| Node | NVM | NVM | NVM |
-| Go | Homebrew (go-grip for Markdown) | Homebrew (go-grip for Markdown) | — |
-| Python | uv | uv | — |
-| Databases | DuckDB, SQLite | DuckDB, SQLite | — |
-| Docker | Docker Desktop (cask) | Docker Desktop (cask) | Docker Engine (apt) |
-| Music software | `--music` flag | `--music` flag | — |
-| Git auth | GitHub CLI (`gh`) | GitHub CLI (`gh`) | GitHub CLI (`gh`) |
-| AI | Claude Code | Claude Code | Claude Code |
+| Package manager     | Homebrew (`/opt/homebrew`)                                                             | Homebrew (`/usr/local`)                                                                | apt + snap                                                                            |
+| Shell               | Zsh + Oh My Zsh                                                                        | Zsh + Oh My Zsh                                                                        | Zsh + Oh My Zsh                                                                       |
+| Node                | NVM                                                                                    | NVM                                                                                    | NVM                                                                                   |
+| Go                  | Homebrew (go-grip for Markdown)                                                        | Homebrew (go-grip for Markdown)                                                        | —                                                                                     |
+| Python              | uv                                                                                     | uv                                                                                     | —                                                                                     |
+| Databases           | DuckDB, SQLite                                                                         | DuckDB, SQLite                                                                         | —                                                                                     |
+| Docker              | Docker Desktop (cask)                                                                  | Docker Desktop (cask)                                                                  | Docker Engine (apt)                                                                   |
+| Music software      | `--music` flag                                                                         | `--music` flag                                                                         | —                                                                                     |
+| Git auth            | GitHub CLI (`gh`)                                                                      | GitHub CLI (`gh`)                                                                      | GitHub CLI (`gh`)                                                                     |
+| AI                  | Claude Code                                                                            | Claude Code                                                                            | Claude Code                                                                           |
 
 ### Common (All Platforms)
 
-- **Shell**: Zsh with Oh My Zsh (robbyrussell theme)
-- **Node**: Managed with NVM
-- **Git**: GitHub CLI (`gh`) for authentication
-- **AI**: Claude Code
-- **CLI Tools**: ripgrep, fd, bat, fzf, zoxide, lsd
+* **Shell**: Zsh with Oh My Zsh (robbyrussell theme)
+
+* **Node**: Managed with NVM
+
+* **Git**: GitHub CLI (`gh`) for authentication
+
+* **AI**: Claude Code
+
+* **CLI Tools**: ripgrep, fd, bat, fzf, zoxide, lsd
 
 ## Repository
 
-- **GitHub**: https://github.com/andrew-tomago/dotfiles
-- **Method**: Bare git repository
-- **Privacy**: Private repository
+* **GitHub**: <https://github.com/andrew-tomago/dotfiles>
+
+* **Method**: Bare git repository
+
+* **Privacy**: Private repository
 
 ## References
 
-- [Bare Git Repository Tutorial](https://www.atlassian.com/git/tutorials/dotfiles)
-- [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
-- [Dotfiles: Best way to store in a bare git repository](https://developer.atlassian.com/blog/2016/02/best-way-to-store-dotfiles-git-bare-repo/)
+* [Bare Git Repository Tutorial](https://www.atlassian.com/git/tutorials/dotfiles)
 
-## [Future] Potentially Useful to Track
+* [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+
+* [Dotfiles: Best way to store in a bare git repository](https://developer.atlassian.com/blog/2016/02/best-way-to-store-dotfiles-git-bare-repo/)
+
+## \[Future] Potentially Useful to Track
 
 Consider tracking these if you customize them:
 
 #### Application Configurations
 
 **`.config/`** - Modern XDG-compliant application configs:
+
 ```bash
 # Example: Track GitHub CLI settings
 vim ~/.gitignore
@@ -332,6 +378,7 @@ config commit -m "Add GitHub CLI configuration"
 ```
 
 **`.cursor/`** - Cursor editor settings:
+
 ```bash
 # If you use Cursor and want to sync settings
 vim ~/.gitignore
@@ -344,19 +391,26 @@ config commit -m "Add Cursor editor settings"
 
 #### Editor Configurations
 
-- **`.vimrc`** - Vim configuration
-- **`.tmux.conf`** - Tmux configuration
-- **`.editorconfig`** - Editor consistency settings
+* **`.vimrc`** - Vim configuration
+
+* **`.tmux.conf`** - Tmux configuration
+
+* **`.editorconfig`** - Editor consistency settings
 
 #### Shell Enhancements
 
-- **`.aliases`** - Custom shell aliases
-- **`.functions`** - Custom shell functions
-- **`.exports`** - Environment variables (non-sensitive)
+* **`.aliases`** - Custom shell aliases
+
+* **`.functions`** - Custom shell functions
+
+* **`.exports`** - Environment variables (non-sensitive)
 
 #### Language-Specific
 
-- **`.npmrc`** - npm configuration (exclude auth tokens!)
-- **`.gemrc`** - Ruby gem configuration
-- **`.pypirc`** - Python package index config (exclude credentials!)
-- **`.Rprofile`** - R configuration
+* **`.npmrc`** - npm configuration (exclude auth tokens!)
+
+* **`.gemrc`** - Ruby gem configuration
+
+* **`.pypirc`** - Python package index config (exclude credentials!)
+
+* **`.Rprofile`** - R configuration
