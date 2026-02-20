@@ -33,7 +33,8 @@
 #   8. Zsh Configuration (set Homebrew zsh as default)
 #   9. Oh My Zsh (zsh framework)
 #  10. NVM (Node version manager - optional, for multiple Node versions)
-#  11. npm Global Packages (Codex)
+#  11. bun (JS runtime / package manager)
+#  12. bun Global Packages (Codex SDK, TypeScript, Vercel, qmd)
 #  12. Claude Config Repository (~/.claude from git)
 #  13. Claude Code (AI coding assistant)
 #  14. GitHub CLI Configuration
@@ -117,12 +118,13 @@ HOMEBREW_CASKS=(
     # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
 )
 
-# npm global packages
-NPM_PACKAGES=(
+# bun global packages
+BUN_PACKAGES=(
     # Note: @openai/codex CLI moved to HOMEBREW_CASKS as native binary (faster, no Node dependency)
-    "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-01-28 | Uninstall: npm uninstall -g @openai/codex-sdk
-    "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: npm uninstall -g typescript
-    "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g vercel
+    "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-01-28 | Uninstall: bun remove -g @openai/codex-sdk
+    "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: bun remove -g typescript
+    "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: bun remove -g vercel
+    "@tobilu/qmd"          # QMD markdown tool | Added: 2026-02-19 | Uninstall: bun remove -g @tobilu/qmd
 )
 
 # Go packages (installed via go install)
@@ -276,8 +278,8 @@ brew_cask_installed() {
     app_installed "$app_name"
 }
 
-npm_package_installed() {
-    npm list -g "$1" &> /dev/null 2>&1
+bun_package_installed() {
+    bun pm ls -g 2>/dev/null | grep -q "\"$1\""
 }
 
 # =============================================================================
@@ -320,19 +322,19 @@ brew_install_cask() {
     fi
 }
 
-# Install an npm package, showing stderr only on failure
-npm_install_global() {
+# Install a bun global package, showing stderr only on failure
+bun_install_global() {
     local package="$1"
     local output
     local exit_code
 
     # First attempt - capture output
-    if output=$(npm install -g "$package" 2>&1); then
+    if output=$(bun add -g "$package" 2>&1); then
         return 0
     else
         exit_code=$?
         # Show the error output on failure
-        print_error "npm install -g $package failed:"
+        print_error "bun add -g $package failed:"
         echo "$output" >&2
         return $exit_code
     fi
@@ -987,31 +989,60 @@ install_nvm() {
 }
 
 # =============================================================================
-# npm Global Packages
+# bun (JS runtime / package manager)
 # =============================================================================
 
-install_npm_packages() {
-    print_section "npm Global Packages"
+install_bun() {
+    print_section "bun"
 
-    if ! command_exists npm; then
-        print_error "npm not found. Skipping npm packages."
+    if command_exists bun; then
+        print_success "bun already installed: $(bun --version)"
+        print_step "Upgrading bun..."
+        bun upgrade 2>/dev/null && print_success "bun upgraded" || print_warning "bun upgrade failed"
+        return 0
+    fi
+
+    print_step "Installing bun via official installer..."
+    curl -fsSL https://bun.sh/install | bash
+
+    # Source the updated PATH for current session
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+
+    if command_exists bun; then
+        print_success "bun installed: $(bun --version)"
+    else
+        print_error "bun installation failed"
+        return 1
+    fi
+}
+
+# =============================================================================
+# bun Global Packages
+# =============================================================================
+
+install_bun_packages() {
+    print_section "bun Global Packages"
+
+    if ! command_exists bun; then
+        print_error "bun not found. Skipping bun packages."
         return 1
     fi
 
-    print_info "Using npm from: $(command -v npm)"
-    print_info "Node version: $(node --version)"
+    print_info "Using bun from: $(command -v bun)"
+    print_info "bun version: $(bun --version)"
 
     local installed=0
     local skipped=0
     local failed=0
 
-    for package in "${NPM_PACKAGES[@]}"; do
-        if npm_package_installed "$package"; then
+    for package in "${BUN_PACKAGES[@]}"; do
+        if bun_package_installed "$package"; then
             print_info "$package already installed"
             ((skipped++))
         else
             print_step "Installing $package..."
-            if npm_install_global "$package"; then
+            if bun_install_global "$package"; then
                 print_success "$package installed"
                 ((installed++))
             else
@@ -1289,11 +1320,11 @@ print_summary() {
         echo -e "    ${CROSS_MARK} Claude Code"
     fi
 
-    # Codex
-    if command_exists npm && npm_package_installed "@openai/codex" 2>/dev/null; then
-        echo -e "    ${CHECK_MARK} OpenAI Codex"
+    # Codex SDK
+    if command_exists bun && bun_package_installed "@openai/codex-sdk" 2>/dev/null; then
+        echo -e "    ${CHECK_MARK} OpenAI Codex SDK"
     else
-        echo -e "    ${CROSS_MARK} OpenAI Codex"
+        echo -e "    ${CROSS_MARK} OpenAI Codex SDK"
     fi
 
     echo ""
@@ -1444,7 +1475,8 @@ main() {
     configure_zsh
     install_oh_my_zsh
     install_nvm
-    install_npm_packages
+    install_bun
+    install_bun_packages
     setup_claude_config
     install_claude_code
     configure_github_cli

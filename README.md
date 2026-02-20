@@ -414,3 +414,4 @@ config commit -m "Add Cursor editor settings"
 * **`.pypirc`** - Python package index config (exclude credentials!)
 
 * **`.Rprofile`** - R configuration
+
