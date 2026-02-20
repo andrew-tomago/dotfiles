@@ -25,18 +25,19 @@
 #   2. Build Essentials (compilers, make, etc.)
 #   3. Core CLI Packages (git, curl, wget, zsh, etc.)
 #   4. Modern CLI Tools via apt (ripgrep, fd, bat, fzf)
-#   5. Additional CLI Tools via manual install (zoxide, lsd, tealdeer)
+#   5. Additional CLI Tools via manual install (zoxide, lsd, tealdeer, bun, ast-grep, codex)
 #   6. Zsh Configuration (set as default shell)
 #   7. Oh My Zsh (zsh framework)
 #   8. GitHub CLI (needed for Claude config clone)
 #   9. NVM + Node.js LTS
-#  10. Claude Config Repository (~/.claude from git)
-#  11. Claude Code (AI coding assistant)
-#  12. Docker (via official repository — independent, heavy)
-#  13. Wine (Windows compatibility layer via WineHQ)
-#  14. Obsidian (Note-taking app via AppImage)
-#  15. Cursor (AI-powered code editor via AppImage)
-#  16. Snap Packages (Discord — independent, optional)
+#  10. Bun Global Packages (using Bun instead of npm for faster installs)
+#  11. Claude Config Repository (~/.claude from git)
+#  12. Claude Code (AI coding assistant)
+#  13. Docker (via official repository — independent, heavy)
+#  14. Wine (Windows compatibility layer via WineHQ)
+#  15. Obsidian (Note-taking app via AppImage)
+#  16. Cursor (AI-powered code editor via AppImage)
+#  17. Snap Packages (Discord — independent, optional)
 #
 # Usage:
 #   chmod +x setup-new-ubuntu.sh
@@ -94,6 +95,9 @@ MANUAL_CLI_TOOLS=(
     "zoxide"           # Smarter cd with frecency tracking
     "lsd"              # Modern ls with colors/icons
     "tealdeer"         # Fast tldr pages client
+    "ast-grep"         # Structural code search tool (native binary)
+    "codex"            # OpenAI Codex CLI (native binary)
+    "bun"              # Fast JavaScript runtime and package manager
 )
 
 # Snap packages (optional GUI apps or tools not in apt)
@@ -101,13 +105,13 @@ SNAP_PACKAGES=(
     "discord"          # Community chat
 )
 
-# npm global packages
-NPM_PACKAGES=(
-    "@openai/codex"        # OpenAI Codex CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g @openai/codex
-    "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-02-13 | Uninstall: npm uninstall -g @openai/codex-sdk
-    "@ast-grep/cli"        # Structural code search tool | Added: 2026-02-13 | Uninstall: npm uninstall -g @ast-grep/cli
-    "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: npm uninstall -g typescript
-    "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: npm uninstall -g vercel
+# Bun global packages (using Bun instead of npm for faster installs)
+BUN_PACKAGES=(
+    # Note: @openai/codex CLI moved to native binary install (faster, no Node dependency)
+    "@openai/codex-sdk"    # OpenAI Codex SDK - programmatic agent control | Added: 2026-02-13 | Uninstall: bun remove -g @openai/codex-sdk
+    "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: bun remove -g typescript
+    "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: bun remove -g vercel
+    "openclaw"             # OpenClaw CLI tool | Added: 2026-02-19 | Uninstall: bun remove -g openclaw
 )
 
 # NVM version to install
@@ -196,6 +200,10 @@ snap_package_installed() {
 
 npm_package_installed() {
     npm list -g "$1" &> /dev/null 2>&1
+}
+
+bun_package_installed() {
+    bun pm ls -g 2>/dev/null | grep -q "^$1@" || bun pm ls -g 2>/dev/null | grep -q " $1@"
 }
 
 # =============================================================================
@@ -385,6 +393,71 @@ install_manual_cli_tools() {
             print_error "Failed to install tealdeer"
         fi
     fi
+
+    # bun - fast JavaScript runtime and package manager
+    if command_exists bun; then
+        print_info "bun already installed"
+        print_step "Current version: $(bun --version 2>/dev/null || echo 'unknown')"
+    else
+        print_step "Installing bun..."
+        if curl -fsSL https://bun.sh/install | bash; then
+            print_success "bun installed"
+            # Add to PATH for current session
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+            print_info "bun version: $(bun --version 2>/dev/null || echo 'unknown')"
+        else
+            print_error "Failed to install bun"
+        fi
+    fi
+
+    # ast-grep - structural code search tool
+    if command_exists ast-grep; then
+        print_info "ast-grep already installed"
+    else
+        print_step "Installing ast-grep..."
+        local ast_version="0.30.3"
+        local ast_tar="ast-grep-linux-x64-gnu.tar.gz"
+        local arch=$(dpkg --print-architecture)
+        if [ "$arch" = "arm64" ]; then
+            ast_tar="ast-grep-linux-arm64-gnu.tar.gz"
+        fi
+        if curl -fsSL "https://github.com/ast-grep/ast-grep/releases/download/${ast_version}/${ast_tar}" -o /tmp/ast-grep.tar.gz && \
+           tar -xzf /tmp/ast-grep.tar.gz -C /tmp && \
+           sudo mv /tmp/ast-grep /usr/local/bin/ast-grep && \
+           rm -f /tmp/ast-grep.tar.gz; then
+            print_success "ast-grep installed"
+        else
+            print_error "Failed to install ast-grep"
+            rm -f /tmp/ast-grep.tar.gz 2>/dev/null
+        fi
+    fi
+
+    # codex - OpenAI Codex CLI (native binary)
+    if command_exists codex; then
+        print_info "codex already installed"
+        print_step "Version: $(codex --version 2>/dev/null || echo 'unknown')"
+    else
+        print_step "Installing codex native binary..."
+        local arch=$(dpkg --print-architecture)
+        local download_url
+
+        if [ "$arch" = "arm64" ]; then
+            download_url="https://codex-public.r2.dev/cli/linux-arm64"
+        else
+            download_url="https://codex-public.r2.dev/cli/linux-amd64"
+        fi
+
+        if curl -fsSL "$download_url" -o /tmp/codex && \
+           chmod +x /tmp/codex && \
+           sudo mv /tmp/codex /usr/local/bin/codex; then
+            print_success "codex installed"
+            print_info "Version: $(codex --version 2>/dev/null || echo 'installed')"
+        else
+            print_error "Failed to install codex"
+            rm -f /tmp/codex 2>/dev/null
+        fi
+    fi
 }
 
 # =============================================================================
@@ -523,6 +596,14 @@ generate_zshrc() {
     content+=$'# PATH\n'
     content+=$'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"\n'
     content+=$'\n'
+
+    # --- Bun ---
+    if [ -d "$HOME/.bun" ]; then
+        content+=$'# Bun\n'
+        content+=$'export BUN_INSTALL="$HOME/.bun"\n'
+        content+=$'export PATH="$BUN_INSTALL/bin:$PATH"\n'
+        content+=$'\n'
+    fi
 
     # --- NVM ---
     if [ -d "${NVM_DIR:-$HOME/.nvm}" ]; then
@@ -674,35 +755,36 @@ install_nvm() {
 }
 
 # =============================================================================
-# npm Global Packages
+# Bun Global Packages
 # =============================================================================
 
-install_npm_packages() {
-    print_section "npm Global Packages"
+install_bun_packages() {
+    print_section "Bun Global Packages"
 
-    if [ ${#NPM_PACKAGES[@]} -eq 0 ]; then
-        print_info "No npm packages configured"
+    if [ ${#BUN_PACKAGES[@]} -eq 0 ]; then
+        print_info "No bun packages configured"
         return 0
     fi
 
-    if ! command_exists npm; then
-        print_error "npm not found. Skipping npm packages."
+    if ! command_exists bun; then
+        print_error "bun not found. Skipping bun packages."
+        print_info "Install bun first (it's in the manual CLI tools step)"
         return 1
     fi
 
-    print_info "Using npm from: $(command -v npm)"
-    print_info "Node version: $(node --version)"
+    print_info "Using bun from: $(command -v bun)"
+    print_info "Bun version: $(bun --version)"
 
     local installed=0
     local skipped=0
 
-    for package in "${NPM_PACKAGES[@]}"; do
-        if npm_package_installed "$package"; then
+    for package in "${BUN_PACKAGES[@]}"; do
+        if bun_package_installed "$package"; then
             print_info "$package already installed"
             ((skipped++)) || true
         else
             print_step "Installing $package..."
-            if npm install -g "$package"; then
+            if bun add -g "$package"; then
                 print_success "$package installed"
                 ((installed++)) || true
             else
@@ -1079,10 +1161,15 @@ install_claude_code() {
 
     if command_exists claude; then
         print_success "Claude Code already installed"
-        claude doctor 2>/dev/null || print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
+        print_step "Version: $(claude --version 2>/dev/null || echo 'unknown')"
 
-        print_step "Checking for updates..."
-        claude update 2>/dev/null || print_info "Run 'claude update' to check for updates"
+        # Skip interactive commands (doctor/update) in non-interactive mode
+        if [ -t 0 ]; then
+            print_step "Checking for updates..."
+            claude update 2>/dev/null || print_info "Run 'claude update' to check for updates"
+        else
+            print_info "Run 'claude update' manually to check for updates"
+        fi
 
         return 0
     fi
@@ -1092,7 +1179,7 @@ install_claude_code() {
 
     if command_exists claude || [ -f "$HOME/.claude/local/bin/claude" ]; then
         print_success "Claude Code installed"
-        claude doctor 2>/dev/null || true
+        print_step "Version: $(claude --version 2>/dev/null || echo 'installed')"
     else
         print_error "Claude Code installation may have failed"
         print_info "Try running manually: curl -fsSL https://claude.ai/install.sh | bash"
@@ -1277,6 +1364,27 @@ print_summary() {
         echo -e "    ${CROSS_MARK} tealdeer (tldr)"
     fi
 
+    # bun
+    if command_exists bun; then
+        echo -e "    ${CHECK_MARK} bun (JS runtime & package manager)"
+    else
+        echo -e "    ${CROSS_MARK} bun"
+    fi
+
+    # ast-grep
+    if command_exists ast-grep; then
+        echo -e "    ${CHECK_MARK} ast-grep (structural code search)"
+    else
+        echo -e "    ${CROSS_MARK} ast-grep"
+    fi
+
+    # codex
+    if command_exists codex; then
+        echo -e "    ${CHECK_MARK} codex (OpenAI Codex CLI)"
+    else
+        echo -e "    ${CROSS_MARK} codex"
+    fi
+
     echo ""
     echo -e "  ${BOLD}GUI Applications:${NC}"
     echo ""
@@ -1340,27 +1448,27 @@ main() {
     echo ""
     print_info "This script will prompt for sudo at various points."
 
-    # Run installation steps in order
-    update_system
-    install_build_essentials
-    install_apt_packages
-    install_modern_cli_tools
-    install_manual_cli_tools
-    configure_zsh
-    install_oh_my_zsh
-    install_github_cli
-    install_nvm
-    install_npm_packages
-    setup_claude_config
-    install_claude_code
-    install_docker
-    install_wine
-    install_obsidian
-    install_cursor
-    install_snap_packages
-    generate_zshrc
-    print_dotfiles_reminder
-    print_summary
+    # Run installation steps in order (|| true to continue on errors for idempotency)
+    update_system || true
+    install_build_essentials || true
+    install_apt_packages || true
+    install_modern_cli_tools || true
+    install_manual_cli_tools || true
+    configure_zsh || true
+    install_oh_my_zsh || true
+    install_github_cli || true
+    install_nvm || true
+    install_bun_packages || true
+    setup_claude_config || true
+    install_claude_code || true
+    install_docker || true
+    install_wine || true
+    install_obsidian || true
+    install_cursor || true
+    install_snap_packages || true
+    generate_zshrc || true
+    print_dotfiles_reminder || true
+    print_summary || true
 }
 
 # Run main function
