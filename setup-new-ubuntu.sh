@@ -26,18 +26,19 @@
 #   3. Core CLI Packages (git, curl, wget, zsh, etc.)
 #   4. Modern CLI Tools via apt (ripgrep, fd, bat, fzf)
 #   5. Additional CLI Tools via manual install (zoxide, lsd, tealdeer, bun, ast-grep, codex)
-#   6. Zsh Configuration (set as default shell)
-#   7. Oh My Zsh (zsh framework)
-#   8. GitHub CLI (needed for Claude config clone)
-#   9. NVM + Node.js LTS
-#  10. Bun Global Packages (using Bun instead of npm for faster installs)
-#  11. Claude Config Repository (~/.claude from git)
-#  12. Claude Code (AI coding assistant)
-#  13. Docker (via official repository — independent, heavy)
-#  14. Wine (Windows compatibility layer via WineHQ)
-#  15. Obsidian (Note-taking app via AppImage)
-#  16. Cursor (AI-powered code editor via AppImage)
-#  17. Snap Packages (Discord — independent, optional)
+#   6. Linuxbrew (Homebrew for Linux — required by openclaw skills)
+#   7. Zsh Configuration (set as default shell)
+#   8. Oh My Zsh (zsh framework)
+#   9. GitHub CLI (needed for Claude config clone)
+#  10. Node.js LTS (via NodeSource apt repository)
+#  11. Bun Global Packages (using Bun instead of npm for faster installs)
+#  12. Claude Config Repository (~/.claude from git)
+#  13. Claude Code (AI coding assistant)
+#  14. Docker (via official repository — independent, heavy)
+#  15. Wine (Windows compatibility layer via WineHQ)
+#  16. Obsidian (Note-taking app via AppImage)
+#  17. Cursor (AI-powered code editor via AppImage)
+#  18. Snap Packages (Discord — independent, optional)
 #
 # Usage:
 #   chmod +x setup-new-ubuntu.sh
@@ -67,6 +68,8 @@ BUILD_PACKAGES=(
     "gnupg"
     "lsb-release"
     "software-properties-common"
+    "procps"            # Homebrew prereq (ps, kill, etc.)
+    "file"              # Homebrew prereq (file type detection)
 )
 
 # Core CLI packages (via apt)
@@ -79,6 +82,7 @@ APT_PACKAGES=(
     "unzip"
     "zip"
     "nautilus-share"   # Samba folder sharing in Nautilus
+    "caffeine"         # Prevent screen from sleeping/locking
 )
 
 # Modern CLI tools available via apt
@@ -114,11 +118,8 @@ BUN_PACKAGES=(
     "openclaw"             # OpenClaw CLI tool | Added: 2026-02-19 | Uninstall: bun remove -g openclaw
 )
 
-# NVM version to install
-NVM_VERSION="v0.40.1"
-
-# Node.js LTS version (used if installing via apt instead of NVM)
-NODE_MAJOR_VERSION="20"
+# Node.js major version installed via NodeSource apt repository
+NODE_MAJOR_VERSION="24"
 
 # =============================================================================
 # Color & Output Helpers
@@ -461,6 +462,36 @@ install_manual_cli_tools() {
 }
 
 # =============================================================================
+# Linuxbrew (Homebrew for Linux)
+# =============================================================================
+
+install_linuxbrew() {
+    print_section "Linuxbrew (Homebrew for Linux)"
+
+    local brew_bin="/home/linuxbrew/.linuxbrew/bin/brew"
+
+    if [ -f "$brew_bin" ]; then
+        print_success "Linuxbrew already installed: $($brew_bin --version | head -n1)"
+        # Activate for current session in case it's not yet on PATH
+        eval "$($brew_bin shellenv)" 2>/dev/null || true
+        return 0
+    fi
+
+    print_step "Installing Linuxbrew..."
+    print_info "Required by openclaw skills (1password, gog, goplaces, obsidian-cli, etc.)"
+
+    if NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+        print_success "Linuxbrew installed"
+        eval "$($brew_bin shellenv)"
+        print_info "brew version: $(brew --version | head -n1)"
+    else
+        print_error "Linuxbrew installation failed"
+        print_info "Install manually: /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+        return 1
+    fi
+}
+
+# =============================================================================
 # Snap Packages (Optional)
 # =============================================================================
 
@@ -605,12 +636,10 @@ generate_zshrc() {
         content+=$'\n'
     fi
 
-    # --- NVM ---
-    if [ -d "${NVM_DIR:-$HOME/.nvm}" ]; then
-        content+=$'# NVM\n'
-        content+=$'export NVM_DIR="$HOME/.nvm"\n'
-        content+=$'[ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"\n'
-        content+=$'[ -s "$NVM_DIR/bash_completion" ] && \\. "$NVM_DIR/bash_completion"\n'
+    # --- Linuxbrew ---
+    if [ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+        content+=$'# Linuxbrew\n'
+        content+=$'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"\n'
         content+=$'\n'
     fi
 
@@ -700,56 +729,51 @@ generate_zshrc() {
 }
 
 # =============================================================================
-# NVM (Node Version Manager)
+# Node.js (via NodeSource apt repository)
 # =============================================================================
 
-install_nvm() {
-    print_section "NVM (Node Version Manager)"
+install_nodejs_apt() {
+    print_section "Node.js (via NodeSource apt)"
 
-    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-
-    if [ -d "$NVM_DIR" ]; then
-        print_success "NVM already installed"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-        print_step "Current NVM version: $(nvm --version 2>/dev/null || echo 'unknown')"
-        print_step "Checking for NVM updates..."
-        (
-            cd "$NVM_DIR"
-            git fetch --tags origin
-            local latest_tag
-            latest_tag=$(git describe --abbrev=0 --tags --match "v[0-9]*" "$(git rev-list --tags --max-count=1)")
-            git checkout "$latest_tag" --quiet
-        ) && print_success "NVM updated" || print_warning "NVM update check failed"
-
-        # Reload NVM after update
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-        # Update Node.js to latest LTS
-        print_step "Current Node.js version: $(node --version 2>/dev/null || echo 'none')"
-        print_step "Installing latest LTS Node.js..."
-        if nvm install --lts; then
-            nvm alias default 'lts/*'
-            print_success "Node.js updated to latest LTS: $(nvm current)"
-        else
-            print_warning "Failed to update Node.js"
+    # Check if already installed at the required major version via NodeSource.
+    # Intentionally does NOT short-circuit on Ubuntu universe nodejs (which may be outdated).
+    local NODESOURCE_LIST="/etc/apt/sources.list.d/nodesource.list"
+    if apt_package_installed "nodejs" && [ -f "$NODESOURCE_LIST" ]; then
+        local INSTALLED_MAJOR
+        INSTALLED_MAJOR=$(node --version 2>/dev/null | sed 's/v\([0-9]*\).*/\1/')
+        if [ "${INSTALLED_MAJOR:-0}" -ge "$NODE_MAJOR_VERSION" ]; then
+            print_success "Node.js already at v${INSTALLED_MAJOR} (>= $NODE_MAJOR_VERSION) via NodeSource: $(node --version)"
+            print_step "npm version: $(npm --version 2>/dev/null || echo 'unknown')"
+            return 0
         fi
-        return 0
+        print_step "Node.js v${INSTALLED_MAJOR} below required ${NODE_MAJOR_VERSION} — upgrading via NodeSource..."
+        sudo apt-get remove -y nodejs nodejs-doc libnode* 2>/dev/null || true
+        sudo apt-get autoremove -y 2>/dev/null || true
+    elif apt_package_installed "nodejs"; then
+        # Installed from Ubuntu universe, not NodeSource — remove and replace
+        print_step "Removing Ubuntu universe nodejs ($(node --version 2>/dev/null)) — replacing with NodeSource v${NODE_MAJOR_VERSION}..."
+        sudo apt-get remove -y nodejs nodejs-doc libnode* 2>/dev/null || true
+        sudo apt-get autoremove -y 2>/dev/null || true
     fi
 
-    print_step "Installing NVM $NVM_VERSION..."
-    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
+    print_step "Adding NodeSource GPG key..."
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+        sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    print_step "Adding NodeSource repository (Node.js $NODE_MAJOR_VERSION)..."
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR_VERSION}.x nodistro main" | \
+        sudo tee /etc/apt/sources.list.d/nodesource.list > /dev/null
 
-    if [ -d "$NVM_DIR" ]; then
-        print_success "NVM installed"
-        print_step "Installing latest LTS Node.js..."
-        nvm install --lts
-        nvm alias default 'lts/*'
-        print_success "Node.js LTS installed: $(nvm current)"
+    print_step "Installing Node.js..."
+    sudo apt update
+    sudo apt install -y nodejs
+
+    if command_exists node; then
+        print_success "Node.js installed: $(node --version)"
+        print_success "npm installed: $(npm --version)"
     else
-        print_error "NVM installation failed"
+        print_error "Node.js installation failed"
         return 1
     fi
 }
@@ -1244,13 +1268,6 @@ print_summary() {
         echo -e "    ${CROSS_MARK} Oh My Zsh"
     fi
 
-    # NVM
-    if [ -d "${NVM_DIR:-$HOME/.nvm}" ]; then
-        echo -e "    ${CHECK_MARK} NVM"
-    else
-        echo -e "    ${CROSS_MARK} NVM"
-    fi
-
     # Node
     if command_exists node; then
         echo -e "    ${CHECK_MARK} Node.js ($(node --version))"
@@ -1371,6 +1388,13 @@ print_summary() {
         echo -e "    ${CROSS_MARK} bun"
     fi
 
+    # brew (Linuxbrew)
+    if command_exists brew || [ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+        echo -e "    ${CHECK_MARK} Linuxbrew (brew)"
+    else
+        echo -e "    ${CROSS_MARK} Linuxbrew (brew)"
+    fi
+
     # ast-grep
     if command_exists ast-grep; then
         echo -e "    ${CHECK_MARK} ast-grep (structural code search)"
@@ -1454,10 +1478,11 @@ main() {
     install_apt_packages || true
     install_modern_cli_tools || true
     install_manual_cli_tools || true
+    install_linuxbrew || true
     configure_zsh || true
     install_oh_my_zsh || true
     install_github_cli || true
-    install_nvm || true
+    install_nodejs_apt || true
     install_bun_packages || true
     setup_claude_config || true
     install_claude_code || true
