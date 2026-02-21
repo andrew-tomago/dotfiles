@@ -32,7 +32,7 @@
 #   7. Homebrew Cask Applications (Raycast, Chrome, Docker, etc.)
 #   8. Zsh Configuration (set Homebrew zsh as default)
 #   9. Oh My Zsh (zsh framework)
-#  10. NVM (Node version manager - optional, for multiple Node versions)
+#  10. NVM (Node version manager - installs latest Node, no global binaries)
 #  11. bun (JS runtime / package manager)
 #  12. bun Global Packages (Codex SDK, TypeScript, Vercel, qmd)
 #  12. Claude Config Repository (~/.claude from git)
@@ -125,6 +125,7 @@ BUN_PACKAGES=(
     "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: bun remove -g typescript
     "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: bun remove -g vercel
     "@tobilu/qmd"          # QMD markdown tool | Added: 2026-02-19 | Uninstall: bun remove -g @tobilu/qmd
+    "openclaw"             # OpenClaw CLI | Added: 2026-02-20 | Uninstall: bun remove -g openclaw
 )
 
 # Go packages (installed via go install)
@@ -976,12 +977,12 @@ install_nvm() {
     if [ -d "$NVM_DIR" ]; then
         print_success "NVM installed"
 
-        # Install latest LTS Node via NVM
-        print_step "Installing latest LTS Node.js via NVM..."
+        # Install latest Node via NVM (no global packages — runtime only)
+        print_step "Installing latest Node.js via NVM..."
         print_info "This may take a minute..."
-        nvm install --lts
-        nvm alias default 'lts/*'
-        print_success "Node.js LTS installed via NVM: $(nvm current)"
+        nvm install node
+        nvm alias default 'node'
+        print_success "Node.js latest installed via NVM: $(nvm current)"
     else
         print_error "NVM installation failed"
         return 1
