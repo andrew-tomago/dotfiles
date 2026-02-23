@@ -126,6 +126,7 @@ BUN_PACKAGES=(
     "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: bun remove -g vercel
     "@tobilu/qmd"          # QMD markdown tool | Added: 2026-02-19 | Uninstall: bun remove -g @tobilu/qmd
     "openclaw"             # OpenClaw CLI | Added: 2026-02-20 | Uninstall: bun remove -g openclaw
+    "agent-browser"        # Headless browser automation CLI for AI agents | Added: 2026-02-23 | Uninstall: bun remove -g agent-browser
 )
 
 # Go packages (installed via go install)

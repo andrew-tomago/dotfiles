@@ -116,6 +116,7 @@ BUN_PACKAGES=(
     "typescript"           # TypeScript compiler and language server | Added: 2026-02-13 | Uninstall: bun remove -g typescript
     "vercel"               # Vercel deployment CLI | Added: 2026-02-13 | Uninstall: bun remove -g vercel
     "openclaw"             # OpenClaw CLI tool | Added: 2026-02-19 | Uninstall: bun remove -g openclaw
+    "agent-browser"        # Headless browser automation CLI for AI agents | Added: 2026-02-23 | Uninstall: bun remove -g agent-browser
 )
 
 # Node.js major version installed via NodeSource apt repository
