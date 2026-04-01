@@ -612,6 +612,35 @@ install_go_packages() {
 }
 
 # =============================================================================
+# Rust (via rustup)
+# =============================================================================
+
+install_rustup() {
+    print_section "Rust (via rustup)"
+
+    if command_exists rustup; then
+        print_success "rustup already installed: $(rustup --version 2>/dev/null)"
+        print_step "Updating Rust toolchain..."
+        rustup update && print_success "Rust updated" || print_warning "Update failed"
+        return 0
+    fi
+
+    print_step "Installing Rust via rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    # Source cargo for current session
+    # shellcheck source=/dev/null
+    [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+    if command_exists cargo; then
+        print_success "Rust installed: $(rustc --version)"
+    else
+        print_error "Rust installation failed"
+        return 1
+    fi
+}
+
+# =============================================================================
 # Modern CLI Tools Configuration
 # =============================================================================
 
@@ -1472,6 +1501,7 @@ main() {
     install_gnu_utils
     install_homebrew_packages
     install_go_packages
+    install_rustup
     configure_modern_cli_tools
     install_homebrew_casks
     configure_zsh
