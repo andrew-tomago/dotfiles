@@ -328,6 +328,7 @@ All critical configuration guidelines and workflow instructions are documented i
 | Music software      | `--music` flag                                                                         | `--music` flag                                                                         | —                                                                                     |
 | Git auth            | GitHub CLI (`gh`)                                                                      | GitHub CLI (`gh`)                                                                      | GitHub CLI (`gh`)                                                                     |
 | AI                  | Claude Code                                                                            | Claude Code                                                                            | Claude Code                                                                           |
+| Secrets             | 1Password CLI (`op`)                                                                   | 1Password CLI (`op`)                                                                   | —                                                                                     |
 
 ### Common (All Platforms)
 
@@ -338,6 +339,8 @@ All critical configuration guidelines and workflow instructions are documented i
 * **Git**: GitHub CLI (`gh`) for authentication
 
 * **AI**: Claude Code
+
+* **Secrets**: 1Password CLI (`op`)
 
 * **CLI Tools**: ripgrep, fd, bat, fzf, zoxide, lsd
 
@@ -414,4 +417,3 @@ config commit -m "Add Cursor editor settings"
 * **`.pypirc`** - Python package index config (exclude credentials!)
 
 * **`.Rprofile`** - R configuration
-

@@ -115,6 +115,7 @@ HOMEBREW_CASKS=(
     "granola"          # Meeting notes and transcription
     "obsidian"         # Knowledge base and note-taking
     "codex"            # OpenAI Codex CLI (native binary) | Added: 2026-02-18 | Uninstall: brew uninstall --cask codex
+    "1password-cli"    # 1Password CLI - secrets/credentials management | Added: 2026-04-22 | Uninstall: brew uninstall --cask 1password-cli
     # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
 )
 
