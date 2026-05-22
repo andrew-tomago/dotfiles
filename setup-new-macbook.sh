@@ -581,14 +581,20 @@ install_go_packages() {
     local skipped=0
     local failed=0
 
+    local upgraded=0
+
     for package in "${GO_PACKAGES[@]}"; do
-        # Extract binary name from package path (last segment before @)
         local binary_name
         binary_name=$(echo "$package" | sed 's|.*/||; s|@.*||')
 
         if command_exists "$binary_name"; then
-            print_info "$binary_name already installed"
-            ((skipped++))
+            print_step "Refreshing $binary_name..."
+            if go install "$package" 2>&1; then
+                print_success "$binary_name up to date"
+                ((upgraded++))
+            else
+                print_warning "Refresh failed for $binary_name"
+            fi
         else
             print_step "Installing $package..."
             if go install "$package" 2>&1; then
@@ -609,7 +615,7 @@ install_go_packages() {
     fi
 
     echo ""
-    print_info "Summary: $installed installed, $skipped already present, $failed failed"
+    print_info "Summary: $installed installed, $upgraded upgraded, $failed failed"
 }
 
 # =============================================================================
@@ -897,6 +903,24 @@ generate_zshrc() {
         content+=$'\n'
     fi
 
+    # --- bun ---
+    if [ -d "$HOME/.bun" ] || command_exists bun; then
+        content+=$'# bun\n'
+        content+=$'export BUN_INSTALL="$HOME/.bun"\n'
+        content+=$'export PATH="$BUN_INSTALL/bin:$PATH"\n'
+        if [ -s "$HOME/.bun/_bun" ]; then
+            content+=$'[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"\n'
+        fi
+        content+=$'\n'
+    fi
+
+    # --- OpenClaw completion ---
+    if [ -f "$HOME/.openclaw/completions/openclaw.zsh" ]; then
+        content+=$'# OpenClaw completion\n'
+        content+=$'[ -f "$HOME/.openclaw/completions/openclaw.zsh" ] && source "$HOME/.openclaw/completions/openclaw.zsh"\n'
+        content+=$'\n'
+    fi
+
     # --- Dotfiles ---
     if [ -d "$HOME/.dotfiles.git" ]; then
         content+=$'# Dotfiles bare repo\n'
@@ -923,7 +947,7 @@ generate_zshrc() {
             content+=$'cplan() { claude --dangerously-skip-permissions --permission-mode plan "$@"; }\n'
         fi
         if $has_codex; then
-            content+=$'xyolo() { codex --full-auto "$@"; }\n'
+            content+=$'xyolo() { codex --ask-for-approval never "$@"; }\n'
         fi
         content+=$'\n'
     fi
@@ -931,6 +955,11 @@ generate_zshrc() {
     # --- Environment ---
     content+=$'# Environment\n'
     content+=$'export ENABLE_TOOL_SEARCH=auto:5\n'
+    content+=$'\n'
+
+    # --- 1Password service account token ---
+    content+=$'# 1Password service account token\n'
+    content+=$'export OP_SERVICE_ACCOUNT_TOKEN="$(op read '\''op://Service Vault/1Password - Claude Service Account Token/credential'\'' 2>/dev/null)"\n'
     content+=$'\n'
 
     # --- Local overrides ---
@@ -1068,10 +1097,17 @@ install_bun_packages() {
     local skipped=0
     local failed=0
 
+    local upgraded=0
+
     for package in "${BUN_PACKAGES[@]}"; do
         if bun_package_installed "$package"; then
-            print_info "$package already installed"
-            ((skipped++))
+            print_step "Upgrading $package..."
+            if bun_install_global "$package"; then
+                print_success "$package up to date"
+                ((upgraded++))
+            else
+                print_warning "Upgrade failed for $package"
+            fi
         else
             print_step "Installing $package..."
             if bun_install_global "$package"; then
@@ -1085,7 +1121,7 @@ install_bun_packages() {
     done
 
     echo ""
-    print_info "Summary: $installed installed, $skipped already present, $failed failed"
+    print_info "Summary: $installed installed, $upgraded upgraded, $failed failed"
 }
 
 # =============================================================================
