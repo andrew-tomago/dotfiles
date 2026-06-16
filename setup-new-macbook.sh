@@ -117,6 +117,7 @@ HOMEBREW_CASKS=(
     "codex"            # OpenAI Codex CLI (native binary) | Added: 2026-02-18 | Uninstall: brew uninstall --cask codex
     "1password"        # 1Password Mac app - password manager | Added: 2026-05-22 | Uninstall: brew uninstall --cask 1password
     "1password-cli"    # 1Password CLI - secrets/credentials management | Added: 2026-04-22 | Uninstall: brew uninstall --cask 1password-cli
+    "anki"             # Spaced-repetition flashcards | Added: 2026-06-16 | Uninstall: brew uninstall --cask anki
     # Note: Amphetamine (keep-awake utility) is Mac App Store only - install manually from App Store
 )
 
