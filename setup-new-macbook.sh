@@ -1212,6 +1212,33 @@ install_claude_code() {
     fi
 }
 
+install_antigravity_cli() {
+    print_section "Antigravity CLI"
+    # Installs the 'agy' binary to ~/.local/bin via native installer.
+
+    if command_exists agy; then
+        print_success "Antigravity CLI already installed"
+        print_step "Version: $(agy --version 2>/dev/null || echo 'unknown')"
+        return 0
+    fi
+
+    print_step "Installing Antigravity CLI via native installer..."
+
+    curl -fsSL https://antigravity.google/cli/install.sh | bash
+
+    if command_exists agy; then
+        print_success "Antigravity CLI installed"
+        print_step "Version: $(agy --version 2>/dev/null || echo 'installed')"
+    else
+        if [ -f "$HOME/.local/bin/agy" ]; then
+            print_success "Antigravity CLI installed (restart terminal or add ~/.local/bin to PATH)"
+        else
+            print_error "Antigravity CLI installation may have failed"
+            print_info "Try running manually: curl -fsSL https://antigravity.google/cli/install.sh | bash"
+        fi
+    fi
+}
+
 
 # =============================================================================
 # GitHub CLI Configuration
@@ -1550,6 +1577,7 @@ main() {
     install_bun_packages
     setup_claude_config
     install_claude_code
+    install_antigravity_cli
     configure_github_cli
     configure_default_browser
     generate_zprofile
